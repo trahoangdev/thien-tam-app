@@ -101,7 +101,6 @@ class AdminApiClient {
   Future<Reading> createReading(ReadingCreateRequest request) async {
     try {
       final payload = request.toJson();
-      print('📤 Creating reading - Payload: $payload');
 
       final response = await _dio.post(
         '/admin/readings',
@@ -109,14 +108,8 @@ class AdminApiClient {
         options: Options(headers: _authHeaders),
       );
 
-      print('✅ Create response: ${response.statusCode}');
-      print('📥 Response data: ${response.data}');
-
       return Reading.fromJson(response.data['reading']);
     } on DioException catch (e) {
-      print(
-        '❌ Create reading error: ${e.response?.statusCode} - ${e.response?.data}',
-      );
       throw _handleError(e);
     }
   }

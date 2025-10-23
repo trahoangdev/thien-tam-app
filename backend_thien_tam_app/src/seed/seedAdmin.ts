@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 import { connectDB } from "../db";
-import User from "../models/User";
+import AdminUser from "../models/AdminUser";
 import bcrypt from "bcrypt";
 
 (async () => {
@@ -12,17 +12,19 @@ import bcrypt from "bcrypt";
     // Admin account credentials from environment or defaults
     const email = process.env.ADMIN_EMAIL || "admin@thientam.local";
     const password = process.env.ADMIN_PASSWORD || "ThienTam@2025";
+    const name = process.env.ADMIN_NAME || "Admin User";
     
     // Hash password
     const passwordHash = await bcrypt.hash(password, 10);
 
     // Create or update admin user
-    const result = await User.updateOne(
+    const result = await AdminUser.updateOne(
       { email },
       {
         $set: {
           email,
           passwordHash,
+          name,
           roles: ["ADMIN"],
           isActive: true,
         },
@@ -39,8 +41,9 @@ import bcrypt from "bcrypt";
     console.log("\n📧 Admin credentials:");
     console.log(`   Email: ${email}`);
     console.log(`   Password: ${password}`);
+    console.log(`   Name: ${name}`);
     console.log("\n⚠️  IMPORTANT: Change this password in production!");
-    console.log("   Set ADMIN_EMAIL and ADMIN_PASSWORD environment variables\n");
+    console.log("   Set ADMIN_EMAIL, ADMIN_PASSWORD, and ADMIN_NAME environment variables\n");
 
     process.exit(0);
   } catch (error) {

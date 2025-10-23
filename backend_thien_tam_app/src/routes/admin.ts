@@ -157,17 +157,60 @@ r.delete("/readings/:id", async (req, res) => {
 r.get("/stats", async (_req, res) => {
   try {
     const totalReadings = await Reading.countDocuments();
+    
+    // Topic counts with proper formatting
     const topicCounts = await Reading.aggregate([
       { $unwind: "$topicSlugs" },
       { $group: { _id: "$topicSlugs", count: { $sum: 1 } } },
-      { $sort: { count: -1 } }
+      { $sort: { count: -1 } },
+      { $project: { topic: "$_id", count: 1 } }
+    ]);
+
+    // Recent readings (last 10)
+    const recentReadings = await Reading.find()
+      .sort({ date: -1 })
+      .limit(10)
+      .select('title date topicSlugs')
+      .lean();
+
+    // Monthly statistics (last 6 months)
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    
+    const monthlyStats = await Reading.aggregate([
+      { $match: { date: { $gte: sixMonthsAgo } } },
+      {
+        $group: {
+          _id: {
+            year: { $year: "$date" },
+            month: { $month: "$date" }
+          },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { "_id.year": -1, "_id.month": -1 } },
+      {
+        $project: {
+          month: {
+            $concat: [
+              { $toString: "$_id.year" },
+              "-",
+              { $toString: "$_id.month" }
+            ]
+          },
+          count: 1
+        }
+      }
     ]);
 
     res.json({
       totalReadings,
       topicCounts,
+      recentReadings,
+      monthlyStats,
     });
   } catch (error) {
+    console.error("Admin stats error:", error);
     res.status(500).json({ message: "Lỗi server" });
   }
 });

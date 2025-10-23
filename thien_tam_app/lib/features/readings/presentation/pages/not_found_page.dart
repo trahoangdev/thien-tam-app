@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'today_page.dart'; // Import để sử dụng selectedDateProvider
 
 class NotFoundPage extends ConsumerWidget {
   final String? message;
@@ -268,6 +269,3 @@ class NotFoundPage extends ConsumerWidget {
     );
   }
 }
-
-/// Provider for selected date (needed for navigation)
-final selectedDateProvider = StateProvider<DateTime?>((ref) => null);

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/history_providers.dart';
+import '../../../auth/presentation/providers/permission_providers.dart'
+    as permissions;
+import '../../../auth/presentation/pages/login_page.dart';
 import 'package:intl/intl.dart';
 
 class HistoryPage extends ConsumerWidget {
@@ -8,6 +11,64 @@ class HistoryPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final canViewHistory = ref.watch(permissions.canViewHistoryProvider);
+
+    // Show permission denied if user can't view history
+    if (!canViewHistory) {
+      return Scaffold(
+        backgroundColor: Theme.of(context).colorScheme.background,
+        appBar: AppBar(
+          title: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.history, color: Theme.of(context).colorScheme.primary),
+              const SizedBox(width: 8),
+              const Text('Lịch sử'),
+            ],
+          ),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.lock_outline,
+                size: 64,
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Cần đăng nhập để xem lịch sử',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Đăng nhập để theo dõi lịch sử đọc của bạn',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (context) => const LoginPage()),
+                  );
+                },
+                icon: const Icon(Icons.login),
+                label: const Text('Đăng nhập'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     // Watch để rebuild khi history thay đổi
     ref.watch(historyRefreshProvider);
     final historyService = ref.read(historyServiceProvider);

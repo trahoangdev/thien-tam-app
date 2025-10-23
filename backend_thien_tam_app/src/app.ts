@@ -6,6 +6,7 @@ import compression from "compression";
 import rateLimit from "express-rate-limit";
 import readingsRouter from "./routes/readings";
 import authRouter from "./routes/auth";
+import userAuthRouter from "./routes/userAuth";
 import adminRouter from "./routes/admin";
 import topicsRouter from "./routes/topics";
 import { requireAuth, requireRoles } from "./middlewares/auth";
@@ -38,7 +39,8 @@ app.use("/readings", readingsRouter);
 app.get("/healthz", (_req, res) => res.json({ ok: true }));
 
 // Auth routes (with stricter rate limit)
-app.use("/auth", authLimiter, authRouter);
+app.use("/auth", authLimiter, authRouter); // Admin auth
+app.use("/user-auth", authLimiter, userAuthRouter); // User auth
 
 // Protected admin routes (require authentication and ADMIN or EDITOR role)
 app.use("/admin", requireAuth, requireRoles("ADMIN", "EDITOR"), adminRouter);

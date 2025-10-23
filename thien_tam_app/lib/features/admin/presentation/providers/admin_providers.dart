@@ -31,7 +31,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<AdminUser?>> {
       _authBox = await Hive.openBox('admin_auth');
       await _loadSavedAuth();
     } catch (e) {
-      print('Error initializing Hive: $e');
+      // Handle Hive initialization error silently
     }
   }
 

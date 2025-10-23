@@ -1,12 +1,76 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/bookmark_providers.dart';
+import '../../../auth/presentation/providers/permission_providers.dart'
+    as permissions;
+import '../../../auth/presentation/pages/login_page.dart';
 
 class BookmarksPage extends ConsumerWidget {
   const BookmarksPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final canBookmark = ref.watch(permissions.canBookmarkProvider);
+
+    // Show permission denied if user can't bookmark
+    if (!canBookmark) {
+      return Scaffold(
+        backgroundColor: Theme.of(context).colorScheme.background,
+        appBar: AppBar(
+          title: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.bookmark_border,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(width: 8),
+              const Text('Đánh dấu'),
+            ],
+          ),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.lock_outline,
+                size: 64,
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Cần đăng nhập để sử dụng tính năng này',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Đăng nhập để lưu và quản lý các bài đọc yêu thích',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (context) => const LoginPage()),
+                  );
+                },
+                icon: const Icon(Icons.login),
+                label: const Text('Đăng nhập'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     // Watch để rebuild khi bookmarks thay đổi
     ref.watch(bookmarkRefreshProvider);
     final bookmarkService = ref.read(bookmarkServiceProvider);

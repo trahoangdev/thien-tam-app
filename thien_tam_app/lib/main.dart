@@ -10,6 +10,8 @@ import 'features/admin/presentation/pages/admin_login_page.dart';
 import 'features/admin/presentation/pages/admin_home_page.dart';
 import 'features/admin/presentation/pages/admin_readings_list_page.dart';
 import 'features/admin/presentation/pages/admin_reading_form_page.dart';
+import 'features/auth/presentation/providers/auth_providers.dart';
+import 'features/auth/presentation/pages/splash_page.dart';
 
 // Cache provider
 final cacheProvider = Provider<Box>((ref) => throw UnimplementedError());
@@ -42,6 +44,9 @@ class App extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
 
+    // Initialize auth service
+    ref.read(authServiceProvider).initialize();
+
     return MaterialApp(
       title: 'Thiền Tâm - Bài Đọc Theo Ngày',
       debugShowCheckedModeBanner: false,
@@ -63,10 +68,18 @@ class App extends ConsumerWidget {
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFFB8956A), // Vàng gỗ nhạt
           brightness: Brightness.light,
-          primary: const Color(0xFFB8956A), // Vàng gỗ Phật giáo (nhẹ hơn)
+          primary: const Color(0xFF8B6F47), // Tối hơn để có contrast tốt
           secondary: const Color(0xFFA67C52), // Nâu đồng
-          surface: const Color(0xFFF4EFE4), // Kem nhạt, không chói
-          background: const Color(0xFFEBE4D5), // Be sáng như giấy cổ
+          surface: const Color(0xFFF9F5F0), // Kem nhạt, không chói
+          background: const Color(0xFFF4EFE4), // Be sáng như giấy cổ
+          onPrimary: Colors.white, // Text trên primary color
+          onSecondary: Colors.white, // Text trên secondary color
+          onSurface: const Color(0xFF2D2D2D), // Text tối trên surface
+          onBackground: const Color(0xFF2D2D2D), // Text tối trên background
+          surfaceVariant: const Color(0xFFF0E6D2), // Surface variant cho cards
+          onSurfaceVariant: const Color(
+            0xFF4A4A4A,
+          ), // Text trên surface variant
         ),
         fontFamily: 'serif',
         textTheme: const TextTheme(
@@ -93,7 +106,7 @@ class App extends ConsumerWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(12)),
           ),
-          color: Color(0xFFFAF6ED), // Card màu kem nhạt thay vì trắng
+          color: Color(0xFFF0E6D2), // Sử dụng surfaceVariant cho cards
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
@@ -114,6 +127,14 @@ class App extends ConsumerWidget {
           secondary: const Color(0xFFC19A6B),
           surface: const Color(0xFF2C2416),
           background: const Color(0xFF1A1410),
+          onPrimary: const Color(0xFF1A1410), // Text tối trên primary
+          onSecondary: const Color(0xFF1A1410), // Text tối trên secondary
+          onSurface: const Color(0xFFE8E0D0), // Text sáng trên surface
+          onBackground: const Color(0xFFE8E0D0), // Text sáng trên background
+          surfaceVariant: const Color(0xFF3A3224), // Surface variant cho cards
+          onSurfaceVariant: const Color(
+            0xFFD4C4A8,
+          ), // Text trên surface variant
         ),
         fontFamily: 'serif',
         textTheme: const TextTheme(
@@ -140,10 +161,12 @@ class App extends ConsumerWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(12)),
           ),
+          color: Color(0xFF3A3224), // Sử dụng surfaceVariant cho dark mode
         ),
       ),
-      home: const MainShell(),
+      home: const SplashPage(),
       routes: {
+        '/main': (context) => const MainShell(),
         '/admin/login': (context) => const AdminLoginPage(),
         '/admin/home': (context) => const AdminHomePage(),
         '/admin/readings': (context) => const AdminReadingsListPage(),

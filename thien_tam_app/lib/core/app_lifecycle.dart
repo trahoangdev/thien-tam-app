@@ -19,7 +19,7 @@ class AppLifecycleNotifier extends StateNotifier<AppLifecycleState>
     this.state = state;
 
     if (state == AppLifecycleState.resumed) {
-      print('🔄 App resumed - triggering refresh');
+      // App resumed - trigger refresh
     }
   }
 

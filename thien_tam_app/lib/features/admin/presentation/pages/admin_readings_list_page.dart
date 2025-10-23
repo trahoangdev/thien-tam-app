@@ -26,7 +26,7 @@ class _AdminReadingsListPageState extends ConsumerState<AdminReadingsListPage> {
     ref.listen<AppLifecycleState>(appLifecycleProvider, (previous, next) {
       if (previous != AppLifecycleState.resumed &&
           next == AppLifecycleState.resumed) {
-        print('🔄 Auto-refreshing admin readings after app resume');
+        // Auto-refresh admin readings after app resume
         Future.delayed(const Duration(milliseconds: 500), () {
           ref.invalidate(adminReadingsProvider);
         });

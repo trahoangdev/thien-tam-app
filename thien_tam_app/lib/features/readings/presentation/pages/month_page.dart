@@ -4,15 +4,32 @@ import '../providers/reading_providers.dart';
 import '../../../../core/app_lifecycle.dart';
 import 'package:intl/intl.dart';
 import 'detail_page.dart';
+import '../widgets/buddhist_calendar_widget.dart';
+import 'not_found_page.dart';
 
-class MonthPage extends ConsumerWidget {
+class MonthPage extends ConsumerStatefulWidget {
   final int year;
   final int month;
 
   const MonthPage({super.key, required this.year, required this.month});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MonthPage> createState() => _MonthPageState();
+}
+
+class _MonthPageState extends ConsumerState<MonthPage> {
+  late int _currentYear;
+  late int _currentMonth;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentYear = widget.year;
+    _currentMonth = widget.month;
+  }
+
+  @override
+  Widget build(BuildContext context) {
     // Listen to app lifecycle for auto-refresh
     ref.listen<AppLifecycleState>(appLifecycleProvider, (previous, next) {
       if (previous != AppLifecycleState.resumed &&
@@ -24,7 +41,9 @@ class MonthPage extends ConsumerWidget {
       }
     });
 
-    final state = ref.watch(monthReadingsProvider((year, month)));
+    final state = ref.watch(
+      monthReadingsProvider((_currentYear, _currentMonth)),
+    );
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
@@ -39,7 +58,7 @@ class MonthPage extends ConsumerWidget {
             ),
             const SizedBox(width: 8),
             Text(
-              'Tháng $month/$year',
+              'Tháng $_currentMonth/$_currentYear',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -54,78 +73,136 @@ class MonthPage extends ConsumerWidget {
       ),
       body: state.when(
         data: (readings) {
-          if (readings.isEmpty) {
-            return const Center(
-              child: Text('Không có bài đọc nào trong tháng này'),
-            );
-          }
           return RefreshIndicator(
             onRefresh: () async {
               // Invalidate provider để force reload từ server
               ref.invalidate(monthReadingsProvider);
             },
-            child: ListView.builder(
-              itemCount: readings.length,
-              padding: const EdgeInsets.all(8),
+            child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
-              itemBuilder: (context, index) {
-                final reading = readings[index];
-                // Convert UTC to local date for display and navigation
-                final localDate = reading.date.toLocal();
-
-                return Card(
-                  margin: const EdgeInsets.symmetric(
-                    vertical: 4,
-                    horizontal: 8,
-                  ),
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      child: Text(
-                        localDate.day.toString(),
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    title: Text(
-                      reading.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    subtitle: Text(
-                      DateFormat('EEEE, dd/MM/yyyy', 'vi').format(localDate),
-                    ),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      // Pass local date to match API format (yyyy-mm-dd)
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => DetailPage(date: localDate),
-                        ),
-                      );
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  // Buddhist Calendar Widget
+                  BuddhistCalendarWidget(
+                    year: _currentYear,
+                    month: _currentMonth,
+                    readings: readings,
+                    onDateSelected: (selectedDate) {
+                      // Không navigate nữa, chỉ hiển thị thông tin ngày được chọn
+                      // Bài đọc sẽ được hiển thị trực tiếp trong BuddhistCalendarWidget
+                    },
+                    onMonthChanged: (newYear, newMonth) {
+                      // Update state instead of navigating
+                      setState(() {
+                        _currentYear = newYear;
+                        _currentMonth = newMonth;
+                      });
                     },
                   ),
-                );
-              },
+                  const SizedBox(height: 24),
+                  // Readings list for the month
+                  if (readings.isNotEmpty) ...[
+                    Text(
+                      'Bài đọc trong tháng',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    ...readings.map((reading) {
+                      final localDate = reading.date.toLocal();
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: Theme.of(
+                              context,
+                            ).colorScheme.primaryContainer,
+                            child: Text(
+                              localDate.day.toString(),
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onPrimaryContainer,
+                              ),
+                            ),
+                          ),
+                          title: Text(
+                            reading.title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          subtitle: Text(
+                            DateFormat(
+                              'EEEE, dd/MM/yyyy',
+                              'vi',
+                            ).format(localDate),
+                          ),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    DetailPage(date: localDate),
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    }),
+                  ] else ...[
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.calendar_today_outlined,
+                              size: 48,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Không có bài đọc nào trong tháng này',
+                              style: Theme.of(context).textTheme.bodyLarge
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                                  ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ),
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline, size: 64, color: Colors.red),
-              const SizedBox(height: 16),
-              Text('Lỗi: $e', style: const TextStyle(color: Colors.red)),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () =>
-                    ref.invalidate(monthReadingsProvider((year, month))),
-                child: const Text('Thử Lại'),
-              ),
-            ],
-          ),
-        ),
+        error: (error, stackTrace) {
+          return NotFoundPage(
+            message:
+                'Lỗi khi tải dữ liệu tháng $_currentMonth/$_currentYear: $error',
+            onRetry: () {
+              ref.invalidate(
+                monthReadingsProvider((_currentYear, _currentMonth)),
+              );
+            },
+            onGoHome: () {
+              Navigator.of(context).pop();
+            },
+          );
+        },
       ),
     );
   }

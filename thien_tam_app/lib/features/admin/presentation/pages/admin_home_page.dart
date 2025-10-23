@@ -5,6 +5,7 @@ import '../providers/admin_readings_providers.dart';
 import 'admin_readings_list_page.dart';
 import 'admin_reading_form_page.dart';
 import 'admin_topics_list_page.dart';
+import 'admin_stats_page.dart';
 import '../../../../core/app_lifecycle.dart';
 
 class AdminHomePage extends ConsumerWidget {
@@ -19,7 +20,7 @@ class AdminHomePage extends ConsumerWidget {
     ref.listen<AppLifecycleState>(appLifecycleProvider, (previous, next) {
       if (previous != AppLifecycleState.resumed &&
           next == AppLifecycleState.resumed) {
-        print('🔄 Auto-refreshing admin stats after app resume');
+        // Auto-refresh admin stats after app resume
         Future.delayed(const Duration(milliseconds: 500), () {
           ref.invalidate(adminStatsProvider);
         });
@@ -175,8 +176,11 @@ class AdminHomePage extends ConsumerWidget {
                   title: 'Thống kê',
                   subtitle: 'Xem báo cáo',
                   onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Coming soon!')),
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AdminStatsPage(),
+                      ),
                     );
                   },
                 ),

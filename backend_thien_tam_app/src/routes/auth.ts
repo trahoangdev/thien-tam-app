@@ -1,7 +1,7 @@
 import { Router } from "express";
 import jwt, { SignOptions } from "jsonwebtoken";
 import bcrypt from "bcrypt";
-import User from "../models/User";
+import AdminUser from "../models/AdminUser";
 
 const r = Router();
 
@@ -14,7 +14,7 @@ r.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Email và mật khẩu là bắt buộc" });
     }
     
-    const u = await User.findOne({ email, isActive: true });
+    const u = await AdminUser.findOne({ email, isActive: true });
     if (!u) {
       return res.status(401).json({ message: "Email hoặc mật khẩu không đúng" });
     }
@@ -25,13 +25,13 @@ r.post("/login", async (req, res) => {
     }
     
     const access = jwt.sign(
-      { sub: u._id.toString(), roles: u.roles },
+      { sub: (u._id as any).toString(), roles: u.roles },
       process.env.JWT_SECRET as string,
       { expiresIn: "1h" } as SignOptions
     );
     
     const refresh = jwt.sign(
-      { sub: u._id.toString() },
+      { sub: (u._id as any).toString() },
       process.env.REFRESH_SECRET as string,
       { expiresIn: "30d" } as SignOptions
     );
@@ -61,16 +61,16 @@ r.post("/refresh", async (req, res) => {
     }
     
     const p = jwt.verify(refresh, process.env.REFRESH_SECRET as string) as any;
-    const u = await User.findById(p.sub);
+    const u = await AdminUser.findById(p.sub);
     
     if (!u || !u.isActive) {
       return res.status(401).json({ message: "Token không hợp lệ" });
     }
     
     const access = jwt.sign(
-      { sub: u._id.toString(), roles: u.roles },
+      { sub: (u._id as any).toString(), roles: u.roles },
       process.env.JWT_SECRET as string,
-      { expiresIn: "1h" } as SignOptions
+      { expiresIn: "7 days" } as SignOptions
     );
     
     res.json({ access });
@@ -89,7 +89,7 @@ r.get("/me", async (req, res) => {
     
     const token = h.slice(7);
     const payload = jwt.verify(token, process.env.JWT_SECRET as string) as any;
-    const u = await User.findById(payload.sub).select("-passwordHash");
+    const u = await AdminUser.findById(payload.sub).select("-passwordHash");
     
     if (!u || !u.isActive) {
       return res.status(401).json({ message: "User không tồn tại" });

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/topic_providers.dart';
 import '../../data/models/topic.dart';
 import 'admin_topic_form_page.dart';
+import '../../../readings/presentation/pages/not_found_page.dart';
 
 class AdminTopicsListPage extends ConsumerStatefulWidget {
   const AdminTopicsListPage({super.key});
@@ -189,33 +190,23 @@ class _AdminTopicsListPageState extends ConsumerState<AdminTopicsListPage> {
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.error_outline,
-                      size: 64,
-                      color: Colors.red,
-                    ),
-                    const SizedBox(height: 16),
-                    Text('Lỗi: $error'),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () {
-                        ref.invalidate(
-                          adminTopicsProvider((
-                            page: _currentPage,
-                            limit: 20,
-                            search: _searchQuery,
-                          )),
-                        );
-                      },
-                      child: const Text('Thử lại'),
-                    ),
-                  ],
-                ),
-              ),
+              error: (error, stack) {
+                return NotFoundPage(
+                  message: 'Lỗi tải danh sách chủ đề: $error',
+                  onRetry: () {
+                    ref.invalidate(
+                      adminTopicsProvider((
+                        page: _currentPage,
+                        limit: 20,
+                        search: _searchQuery,
+                      )),
+                    );
+                  },
+                  onGoHome: () {
+                    Navigator.of(context).pop();
+                  },
+                );
+              },
             ),
           ),
         ],

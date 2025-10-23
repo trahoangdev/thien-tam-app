@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../providers/admin_readings_providers.dart';
 import '../../data/models/reading_create_request.dart';
 import '../../data/models/reading_update_request.dart';
+import '../../../readings/presentation/pages/not_found_page.dart';
 
 class AdminReadingFormPage extends ConsumerStatefulWidget {
   final String? readingId; // null = create mode, non-null = edit mode
@@ -158,10 +159,17 @@ class _AdminReadingFormPageState extends ConsumerState<AdminReadingFormPage> {
           appBar: AppBar(title: const Text('Đang tải...')),
           body: const Center(child: CircularProgressIndicator()),
         ),
-        error: (error, _) => Scaffold(
-          appBar: AppBar(title: const Text('Lỗi')),
-          body: Center(child: Text('Lỗi tải dữ liệu: $error')),
-        ),
+        error: (error, _) {
+          return NotFoundPage(
+            message: 'Lỗi tải dữ liệu bài đọc: $error',
+            onRetry: () {
+              ref.invalidate(adminReadingByIdProvider(widget.readingId!));
+            },
+            onGoHome: () {
+              Navigator.of(context).pop();
+            },
+          );
+        },
       );
     }
 

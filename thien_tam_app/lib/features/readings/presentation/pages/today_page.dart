@@ -3,12 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/reading_providers.dart';
 import '../providers/bookmark_providers.dart';
 import '../providers/history_providers.dart';
+import '../../data/reading_stats_service.dart';
 import '../../../../core/app_lifecycle.dart';
 import 'package:intl/intl.dart';
 import 'search_page.dart';
 import '../../data/models/reading.dart';
 import 'detail_page.dart';
 import 'not_found_page.dart'; // NEW
+import '../../../auth/presentation/providers/permission_providers.dart'
+    as permissions;
+import '../../../../core/settings_providers.dart';
 
 // Provider cho ngày được chọn (mặc định là hôm nay)
 final selectedDateProvider = StateProvider<DateTime?>((ref) => null);
@@ -37,7 +41,6 @@ class TodayPageContent extends ConsumerWidget {
       if (previous != AppLifecycleState.resumed &&
           next == AppLifecycleState.resumed) {
         // App đã resume từ background → refresh data
-        print('🔄 Auto-refreshing today page after app resume');
         Future.delayed(const Duration(milliseconds: 500), () {
           if (isToday) {
             ref.invalidate(todayProvider);
@@ -327,15 +330,22 @@ class TodayPageContent extends ConsumerWidget {
     int index,
   ) {
     final bookmarkService = ref.watch(bookmarkServiceProvider);
-    final isBookmarked = ref.watch(
-      bookmarkServiceProvider.select((s) => s.isBookmarked(reading.id)),
-    );
+    ref.watch(bookmarkRefreshProvider); // Watch for refresh trigger
+    final isBookmarked = bookmarkService.isBookmarked(reading.id);
+    final canBookmark = ref.watch(permissions.canBookmarkProvider);
+    final fontSize = ref.watch(fontSizeProvider);
+    final lineHeight = ref.watch(lineHeightProvider);
 
     return Card(
       elevation: 1,
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
-        onTap: () {
+        onTap: () async {
+          // Track reading activity
+          await ref
+              .read(readingStatsProvider.notifier)
+              .addReading(readingTimeMinutes: 1);
+
           // Navigate to detail page with the specific reading
           Navigator.push(
             context,
@@ -373,16 +383,39 @@ class TodayPageContent extends ConsumerWidget {
                     ),
                   ),
                   const Spacer(),
-                  IconButton(
-                    icon: Icon(
-                      isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                      color: isBookmarked
-                          ? Theme.of(context).colorScheme.primary
+                  Tooltip(
+                    message: canBookmark
+                        ? (isBookmarked ? 'Bỏ đánh dấu' : 'Đánh dấu')
+                        : 'Đăng nhập để đánh dấu',
+                    child: GestureDetector(
+                      onTap: canBookmark
+                          ? () async {
+                              try {
+                                final result = await bookmarkService
+                                    .toggleBookmark(reading.id);
+                                // Force refresh the bookmark state
+                                ref
+                                    .read(bookmarkRefreshProvider.notifier)
+                                    .state++;
+                              } catch (e) {
+                                // Handle error silently
+                              }
+                            }
                           : null,
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        child: Icon(
+                          isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                          color: isBookmarked
+                              ? Theme.of(context).colorScheme.primary
+                              : canBookmark
+                              ? null
+                              : Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withOpacity(0.3),
+                        ),
+                      ),
                     ),
-                    onPressed: () async {
-                      await bookmarkService.toggleBookmark(reading.id);
-                    },
                   ),
                 ],
               ),
@@ -391,9 +424,10 @@ class TodayPageContent extends ConsumerWidget {
               // Title
               Text(
                 reading.title,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16 + (fontSize * 4), // Base 16px + fontSize scale
+                ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -404,7 +438,8 @@ class TodayPageContent extends ConsumerWidget {
                 Text(
                   reading.body!,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    height: 1.4, // Better line height
+                    height: lineHeight, // Use lineHeight from settings
+                    fontSize: 14 + (fontSize * 2), // Base 14px + fontSize scale
                   ),
                   maxLines: 4, // More lines for better readability
                   overflow: TextOverflow.ellipsis,

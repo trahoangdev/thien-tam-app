@@ -1,27 +1,83 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:async';
 import '../providers/reading_providers.dart';
+import '../../data/reading_stats_service.dart';
 import 'package:intl/intl.dart';
+import 'not_found_page.dart';
+import '../../../../core/settings_providers.dart';
 
-class DetailPage extends ConsumerWidget {
+class DetailPage extends ConsumerStatefulWidget {
   final DateTime date;
 
   const DetailPage({super.key, required this.date});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(readingByDateProvider(date));
+  ConsumerState<DetailPage> createState() => _DetailPageState();
+}
+
+class _DetailPageState extends ConsumerState<DetailPage> {
+  DateTime? _startTime;
+  Timer? _readingTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _startTime = DateTime.now();
+    _startReadingTimer();
+  }
+
+  @override
+  void dispose() {
+    _readingTimer?.cancel();
+    _trackReadingTime();
+    super.dispose();
+  }
+
+  void _startReadingTimer() {
+    _readingTimer = Timer.periodic(const Duration(minutes: 1), (timer) {
+      // Update reading time every minute
+      _trackReadingTime();
+    });
+  }
+
+  void _trackReadingTime() async {
+    if (_startTime != null) {
+      final readingTime = DateTime.now().difference(_startTime!).inMinutes;
+      if (readingTime > 0) {
+        await ref
+            .read(readingStatsProvider.notifier)
+            .addReading(readingTimeMinutes: readingTime);
+        _startTime = DateTime.now(); // Reset start time
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = ref.watch(readingByDateProvider(widget.date));
+    final fontSize = ref.watch(fontSizeProvider);
+    final lineHeight = ref.watch(lineHeightProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Bài đọc ${DateFormat('dd/MM/yyyy').format(date)}'),
+        title: Text('Bài đọc ${DateFormat('dd/MM/yyyy').format(widget.date)}'),
         centerTitle: true,
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: state.when(
         data: (readings) {
           if (readings.isEmpty) {
-            return const Center(child: Text('Không có bài đọc nào'));
+            return NotFoundPage(
+              message:
+                  'Không có bài đọc nào cho ngày ${DateFormat('dd/MM/yyyy').format(widget.date)}',
+              onRetry: () {
+                ref.invalidate(readingByDateProvider(widget.date));
+              },
+              onGoHome: () {
+                Navigator.of(context).pop();
+              },
+            );
           }
 
           // Show first reading (or could show list if multiple)
@@ -72,6 +128,7 @@ class DetailPage extends ConsumerWidget {
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: Theme.of(context).colorScheme.primary,
+                    fontSize: 20 + (fontSize * 6), // Base 20px + fontSize scale
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -110,9 +167,10 @@ class DetailPage extends ConsumerWidget {
                 const Divider(height: 32),
                 Text(
                   reading.body ?? 'Nội dung đang được cập nhật...',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyLarge?.copyWith(height: 1.8, fontSize: 16),
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    height: lineHeight, // Use lineHeight from settings
+                    fontSize: 16 + (fontSize * 4), // Base 16px + fontSize scale
+                  ),
                   textAlign: TextAlign.justify,
                 ),
 
@@ -192,21 +250,17 @@ class DetailPage extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline, size: 64, color: Colors.red),
-              const SizedBox(height: 16),
-              Text('Lỗi: $e', style: const TextStyle(color: Colors.red)),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () => ref.invalidate(readingByDateProvider(date)),
-                child: const Text('Thử Lại'),
-              ),
-            ],
-          ),
-        ),
+        error: (error, stackTrace) {
+          return NotFoundPage(
+            message: 'Lỗi khi tải bài đọc: $error',
+            onRetry: () {
+              ref.invalidate(readingByDateProvider(widget.date));
+            },
+            onGoHome: () {
+              Navigator.of(context).pop();
+            },
+          );
+        },
       ),
     );
   }
