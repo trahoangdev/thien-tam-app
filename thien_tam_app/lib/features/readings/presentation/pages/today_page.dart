@@ -13,6 +13,7 @@ import 'not_found_page.dart'; // NEW
 import '../../../auth/presentation/providers/permission_providers.dart'
     as permissions;
 import '../../../../core/settings_providers.dart';
+import '../../../tts/presentation/widgets/tts_widget.dart';
 
 // Provider cho ngày được chọn (mặc định là hôm nay)
 final selectedDateProvider = StateProvider<DateTime?>((ref) => null);
@@ -302,7 +303,7 @@ class TodayPageContent extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      _fmtDate(readings.first.date),
+                      _fmtDate(isToday ? DateTime.now() : selectedDate!),
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.primary,
                         fontSize: 14,
@@ -316,7 +317,14 @@ class TodayPageContent extends ConsumerWidget {
 
           // Reading card
           final reading = readings[index - 1];
-          return _buildReadingCard(context, ref, reading, index);
+          return _buildReadingCard(
+            context,
+            ref,
+            reading,
+            index,
+            isToday,
+            selectedDate,
+          );
         },
       ),
     );
@@ -328,6 +336,8 @@ class TodayPageContent extends ConsumerWidget {
     WidgetRef ref,
     Reading reading,
     int index,
+    bool isToday,
+    DateTime? selectedDate,
   ) {
     final bookmarkService = ref.watch(bookmarkServiceProvider);
     ref.watch(bookmarkRefreshProvider); // Watch for refresh trigger
@@ -346,11 +356,18 @@ class TodayPageContent extends ConsumerWidget {
               .read(readingStatsProvider.notifier)
               .addReading(readingTimeMinutes: 1);
 
-          // Navigate to detail page with the specific reading
+          // Navigate to detail page with the correct date
+          // If we're viewing today's readings, use current date (normalized to avoid timezone issues)
+          // If we're viewing a specific date, use that date
+          final now = DateTime.now();
+          final targetDate = isToday
+              ? DateTime(now.year, now.month, now.day)
+              : selectedDate!;
+
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => DetailPage(date: reading.date),
+              builder: (context) => DetailPage(date: targetDate),
             ),
           );
         },
@@ -479,24 +496,33 @@ class TodayPageContent extends ConsumerWidget {
                   }).toList(),
                 ),
 
-              // Read more indicator
+              // TTS Button
               const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Đọc tiếp',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  TTSButton(
+                    text: reading.body ?? 'Nội dung đang được cập nhật...',
+                    showLabel: true,
                   ),
-                  const SizedBox(width: 4),
-                  Icon(
-                    Icons.arrow_forward,
-                    size: 16,
-                    color: Theme.of(context).colorScheme.primary,
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Đọc tiếp',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.arrow_forward,
+                        size: 16,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ],
                   ),
                 ],
               ),

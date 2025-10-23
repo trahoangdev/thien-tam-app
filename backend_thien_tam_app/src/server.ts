@@ -15,6 +15,11 @@ connectDB(MONGO_URI).then(() => {
     console.log(`   GET  /readings?query=...&topic=...&page=...`);
     console.log(`   GET  /readings/month/:yyyy-:mm`);
     console.log(`   GET  /readings/random`);
+    console.log(`\n🎵 Text-to-Speech Endpoints:`);
+    console.log(`   POST /tts/text-to-speech`);
+    console.log(`   GET  /tts/voices`);
+    console.log(`   GET  /tts/models`);
+    console.log(`   GET  /tts/status`);
     console.log(`\n🔐 Auth Endpoints:`);
     console.log(`   POST /auth/login`);
     console.log(`   POST /auth/refresh`);
@@ -26,6 +31,7 @@ connectDB(MONGO_URI).then(() => {
     console.log(`   DELETE /admin/readings/:id`);
     console.log(`   GET    /admin/stats`);
     console.log(`\n📝 Admin credentials: admin@thientam.local / ThienTam@2025`);
+    console.log(`\n⚠️  ElevenLabs API Key: ${process.env.ELEVENLABS_API_KEY ? '✅ Configured' : '❌ Not configured'}`);
   });
 });
 

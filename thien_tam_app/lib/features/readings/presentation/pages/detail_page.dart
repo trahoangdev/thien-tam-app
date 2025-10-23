@@ -6,6 +6,7 @@ import '../../data/reading_stats_service.dart';
 import 'package:intl/intl.dart';
 import 'not_found_page.dart';
 import '../../../../core/settings_providers.dart';
+import '../../../tts/presentation/widgets/tts_widget.dart';
 
 class DetailPage extends ConsumerStatefulWidget {
   final DateTime date;
@@ -245,6 +246,14 @@ class _DetailPageState extends ConsumerState<DetailPage> {
                     ),
                   ),
                 ],
+
+                // TTS Widget with voice selector
+                const SizedBox(height: 24),
+                TTSWidget(
+                  text: reading.body ?? 'Nội dung đang được cập nhật...',
+                  showControls: true,
+                  showVoiceSelector: true,
+                ),
               ],
             ),
           );

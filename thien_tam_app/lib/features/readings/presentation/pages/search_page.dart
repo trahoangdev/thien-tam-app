@@ -132,11 +132,18 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                           ),
                           trailing: const Icon(Icons.chevron_right),
                           onTap: () {
+                            // Normalize date to avoid timezone issues
+                            final normalizedDate = DateTime(
+                              reading.date.year,
+                              reading.date.month,
+                              reading.date.day,
+                            );
+
                             Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) =>
-                                    DetailPage(date: reading.date),
+                                    DetailPage(date: normalizedDate),
                               ),
                             );
                           },

@@ -113,6 +113,12 @@ class _MonthPageState extends ConsumerState<MonthPage> {
                     const SizedBox(height: 16),
                     ...readings.map((reading) {
                       final localDate = reading.date.toLocal();
+                      // Normalize date to avoid timezone issues
+                      final normalizedDate = DateTime(
+                        localDate.year,
+                        localDate.month,
+                        localDate.day,
+                      );
                       return Card(
                         margin: const EdgeInsets.only(bottom: 8),
                         child: ListTile(
@@ -147,7 +153,7 @@ class _MonthPageState extends ConsumerState<MonthPage> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) =>
-                                    DetailPage(date: localDate),
+                                    DetailPage(date: normalizedDate),
                               ),
                             );
                           },
