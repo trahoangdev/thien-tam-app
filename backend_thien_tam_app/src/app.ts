@@ -12,6 +12,7 @@ import topicsRouter from "./routes/topics";
 import ttsRouter from "./routes/tts";
 import { requireAuth, requireRoles } from "./middlewares/auth";
 import { errorHandler } from "./middlewares/error";
+import { setupSwagger } from "./config/swagger";
 
 const app = express();
 
@@ -34,6 +35,9 @@ const authLimiter = rateLimit({
   max: 10, // limit each IP to 10 auth requests per window
   message: "Quá nhiều yêu cầu đăng nhập, vui lòng thử lại sau"
 });
+
+// Swagger documentation
+setupSwagger(app);
 
 // Public routes
 app.use("/readings", readingsRouter);

@@ -24,7 +24,75 @@ const updateTopicSchema = z.object({
   sortOrder: z.number().optional()
 });
 
-// GET /admin/topics - Get all topics with pagination and search
+/**
+ * @swagger
+ * /admin/topics:
+ *   get:
+ *     summary: Get all topics (Admin)
+ *     description: Retrieve all topics with pagination and search
+ *     tags: [Admin - Topics]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 20
+ *         description: Number of items per page
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search in name and description
+ *       - in: query
+ *         name: isActive
+ *         schema:
+ *           type: boolean
+ *         description: Filter by active status
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved topics
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 items:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Topic'
+ *                 total:
+ *                   type: number
+ *                   description: Total number of topics
+ *                 page:
+ *                   type: number
+ *                   description: Current page number
+ *                 pages:
+ *                   type: number
+ *                   description: Total number of pages
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 r.get("/topics", async (req, res) => {
   try {
     const page = parseInt(req.query.page as string) || 1;

@@ -4,7 +4,41 @@ import { startOfLocalDay, rangeOfMonthLocal } from "../utils/date";
 
 const r = Router();
 
-// today - Returns ARRAY of readings
+/**
+ * @swagger
+ * /readings/today:
+ *   get:
+ *     summary: Get today's readings
+ *     description: Returns all readings for today's date
+ *     tags: [Readings]
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved today's readings
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 items:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Reading'
+ *                 total:
+ *                   type: number
+ *                   description: Total number of readings
+ *       404:
+ *         description: No readings found for today
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 r.get("/today", async (req, res) => {
   try {
     const s = startOfLocalDay();
@@ -18,7 +52,50 @@ r.get("/today", async (req, res) => {
   }
 });
 
-// by date /readings/2025-10-21
+/**
+ * @swagger
+ * /readings/{date}:
+ *   get:
+ *     summary: Get readings by date
+ *     description: Returns all readings for a specific date (YYYY-MM-DD format)
+ *     tags: [Readings]
+ *     parameters:
+ *       - in: path
+ *         name: date
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date
+ *           example: "2025-10-24"
+ *         description: Date in YYYY-MM-DD format
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved readings for the date
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 items:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Reading'
+ *                 total:
+ *                   type: number
+ *                   description: Total number of readings
+ *       404:
+ *         description: No readings found for the specified date
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 r.get("/:ymd(\\d{4}-\\d{2}-\\d{2})", async (req, res) => {
   try {
     const [y, m, d] = req.params.ymd.split("-").map(Number);
@@ -36,7 +113,69 @@ r.get("/:ymd(\\d{4}-\\d{2}-\\d{2})", async (req, res) => {
   }
 });
 
-// search + list
+/**
+ * @swagger
+ * /readings:
+ *   get:
+ *     summary: Search and list readings
+ *     description: Search readings by query and topic with pagination
+ *     tags: [Readings]
+ *     parameters:
+ *       - in: query
+ *         name: query
+ *         schema:
+ *           type: string
+ *         description: Search query for title and body
+ *         example: "thiền"
+ *       - in: query
+ *         name: topic
+ *         schema:
+ *           type: string
+ *         description: Filter by topic slug
+ *         example: "phat-giao"
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 50
+ *           default: 10
+ *         description: Number of items per page
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved readings
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 items:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Reading'
+ *                 total:
+ *                   type: number
+ *                   description: Total number of readings
+ *                 page:
+ *                   type: number
+ *                   description: Current page number
+ *                 pages:
+ *                   type: number
+ *                   description: Total number of pages
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 r.get("/", async (req, res) => {
   try {
     const { query = "", topic, page = "1", limit = "10" } = req.query as any;
@@ -56,7 +195,57 @@ r.get("/", async (req, res) => {
   }
 });
 
-// month list /readings/month/2025-10
+/**
+ * @swagger
+ * /readings/month/{yearMonth}:
+ *   get:
+ *     summary: Get readings by month
+ *     description: Returns all readings for a specific month (YYYY-MM format)
+ *     tags: [Readings]
+ *     parameters:
+ *       - in: path
+ *         name: yearMonth
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^\d{4}-\d{2}$'
+ *           example: "2025-10"
+ *         description: Year and month in YYYY-MM format
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved readings for the month
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 items:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                         description: Reading ID
+ *                       date:
+ *                         type: string
+ *                         format: date
+ *                         description: Reading date
+ *                       title:
+ *                         type: string
+ *                         description: Reading title
+ *                       topicSlugs:
+ *                         type: array
+ *                         items:
+ *                           type: string
+ *                         description: Topic slugs
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 r.get("/month/:ym(\\d{4}-\\d{2})", async (req, res) => {
   try {
     const [y, m] = req.params.ym.split("-").map(Number);
@@ -70,7 +259,33 @@ r.get("/month/:ym(\\d{4}-\\d{2})", async (req, res) => {
   }
 });
 
-// random
+/**
+ * @swagger
+ * /readings/random:
+ *   get:
+ *     summary: Get random reading
+ *     description: Returns a random reading from the database
+ *     tags: [Readings]
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved random reading
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Reading'
+ *       404:
+ *         description: No readings found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 r.get("/random", async (_req, res) => {
   try {
     const [doc] = await Reading.aggregate([{ $sample: { size: 1 } }]);

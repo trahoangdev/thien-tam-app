@@ -5,7 +5,83 @@ import AdminUser from "../models/AdminUser";
 
 const r = Router();
 
-// Login endpoint
+/**
+ * @swagger
+ * /auth/login:
+ *   post:
+ *     summary: Admin login
+ *     description: Authenticate admin user and return JWT tokens
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: Admin email address
+ *                 example: "admin@thientam.local"
+ *               password:
+ *                 type: string
+ *                 format: password
+ *                 description: Admin password
+ *                 example: "ThienTam@2025"
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Đăng nhập thành công"
+ *                 accessToken:
+ *                   type: string
+ *                   description: JWT access token
+ *                 refreshToken:
+ *                   type: string
+ *                   description: JWT refresh token
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       description: User ID
+ *                     email:
+ *                       type: string
+ *                       description: User email
+ *                     roles:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                       description: User roles
+ *       400:
+ *         description: Bad request - missing credentials
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: Invalid credentials
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 r.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -51,7 +127,70 @@ r.post("/login", async (req, res) => {
   }
 });
 
-// Refresh token endpoint
+/**
+ * @swagger
+ * /auth/refresh:
+ *   post:
+ *     summary: Refresh admin token
+ *     description: Refresh admin access token using refresh token
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - refresh
+ *             properties:
+ *               refresh:
+ *                 type: string
+ *                 description: Refresh token
+ *                 example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *     responses:
+ *       200:
+ *         description: Token refreshed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 access:
+ *                   type: string
+ *                   description: New JWT access token
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       description: User ID
+ *                     email:
+ *                       type: string
+ *                       description: User email
+ *                     roles:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                       description: User roles
+ *       400:
+ *         description: Bad request - missing refresh token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: Invalid refresh token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 r.post("/refresh", async (req, res) => {
   try {
     const { refresh } = req.body;
@@ -79,7 +218,61 @@ r.post("/refresh", async (req, res) => {
   }
 });
 
-// Get current user info
+/**
+ * @swagger
+ * /auth/me:
+ *   get:
+ *     summary: Get current admin user info
+ *     description: Returns information about the currently authenticated admin user
+ *     tags: [Authentication]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved user info
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                       description: User ID
+ *                     email:
+ *                       type: string
+ *                       description: User email
+ *                     roles:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                       description: User roles
+ *                     isActive:
+ *                       type: boolean
+ *                       description: Whether user is active
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *                       description: Creation timestamp
+ *                     updatedAt:
+ *                       type: string
+ *                       format: date-time
+ *                       description: Last update timestamp
+ *       401:
+ *         description: Unauthorized - invalid or missing token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 r.get("/me", async (req, res) => {
   try {
     const h = req.headers.authorization || "";

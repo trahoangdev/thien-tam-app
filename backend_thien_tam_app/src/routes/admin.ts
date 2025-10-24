@@ -4,7 +4,75 @@ import { startOfLocalDay } from "../utils/date";
 
 const r = Router();
 
-// GET all readings (with pagination)
+/**
+ * @swagger
+ * /admin/readings:
+ *   get:
+ *     summary: Get all readings (Admin)
+ *     description: Retrieve all readings with pagination and filtering options
+ *     tags: [Admin - Readings]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 20
+ *         description: Number of items per page
+ *       - in: query
+ *         name: topic
+ *         schema:
+ *           type: string
+ *         description: Filter by topic slug
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search in title and body
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved readings
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 items:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Reading'
+ *                 total:
+ *                   type: number
+ *                   description: Total number of readings
+ *                 page:
+ *                   type: number
+ *                   description: Current page number
+ *                 pages:
+ *                   type: number
+ *                   description: Total number of pages
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 r.get("/readings", async (req, res) => {
   try {
     const { page = "1", limit = "20", topic, search } = req.query as any;
@@ -34,7 +102,49 @@ r.get("/readings", async (req, res) => {
   }
 });
 
-// GET single reading
+/**
+ * @swagger
+ * /admin/readings/{id}:
+ *   get:
+ *     summary: Get reading by ID (Admin)
+ *     description: Retrieve a specific reading by its ID
+ *     tags: [Admin - Readings]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Reading ID
+ *         example: "507f1f77bcf86cd799439011"
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved reading
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Reading'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Reading not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 r.get("/readings/:id", async (req, res) => {
   try {
     const doc = await Reading.findById(req.params.id);
@@ -47,7 +157,91 @@ r.get("/readings/:id", async (req, res) => {
   }
 });
 
-// CREATE reading
+/**
+ * @swagger
+ * /admin/readings:
+ *   post:
+ *     summary: Create a new reading (Admin)
+ *     description: Create a new reading with all required fields
+ *     tags: [Admin - Readings]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *               - body
+ *               - date
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 description: Title of the reading
+ *                 example: "Chính Niệm - Sống Trong Hiện Tại"
+ *               body:
+ *                 type: string
+ *                 description: Content of the reading
+ *                 example: "Nội dung bài đọc về chính niệm..."
+ *               date:
+ *                 type: string
+ *                 format: date
+ *                 description: Date of the reading (YYYY-MM-DD)
+ *                 example: "2025-10-24"
+ *               topicSlugs:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Array of topic slugs
+ *                 example: ["chanh-niem", "phat-giao"]
+ *               keywords:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Array of keywords
+ *                 example: ["chánh niệm", "hiện tại"]
+ *               source:
+ *                 type: string
+ *                 description: Source of the reading
+ *                 example: "Admin"
+ *               lang:
+ *                 type: string
+ *                 description: Language code
+ *                 example: "vi"
+ *     responses:
+ *       201:
+ *         description: Reading created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Tạo bài đọc thành công"
+ *                 reading:
+ *                   $ref: '#/components/schemas/Reading'
+ *       400:
+ *         description: Bad request - missing required fields
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 r.post("/readings", async (req, res) => {
   try {
     const { date, title, body, topicSlugs, keywords, source, lang } = req.body;
@@ -101,7 +295,90 @@ r.post("/readings", async (req, res) => {
   }
 });
 
-// UPDATE reading
+/**
+ * @swagger
+ * /admin/readings/{id}:
+ *   put:
+ *     summary: Update reading (Admin)
+ *     description: Update an existing reading by its ID
+ *     tags: [Admin - Readings]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Reading ID
+ *         example: "507f1f77bcf86cd799439011"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 description: Updated title
+ *                 example: "Updated Title"
+ *               body:
+ *                 type: string
+ *                 description: Updated content
+ *                 example: "Updated content..."
+ *               topicSlugs:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Updated topic slugs
+ *                 example: ["phat-giao", "tu-tap"]
+ *               keywords:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Updated keywords
+ *                 example: ["thiền", "tu tập"]
+ *               source:
+ *                 type: string
+ *                 description: Updated source
+ *                 example: "Admin"
+ *               lang:
+ *                 type: string
+ *                 description: Updated language
+ *                 example: "vi"
+ *     responses:
+ *       200:
+ *         description: Reading updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Cập nhật thành công"
+ *                 reading:
+ *                   $ref: '#/components/schemas/Reading'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Reading not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 r.put("/readings/:id", async (req, res) => {
   try {
     const { title, body, topicSlugs, keywords, source, lang } = req.body;
@@ -134,7 +411,53 @@ r.put("/readings/:id", async (req, res) => {
   }
 });
 
-// DELETE reading
+/**
+ * @swagger
+ * /admin/readings/{id}:
+ *   delete:
+ *     summary: Delete reading (Admin)
+ *     description: Delete a reading by its ID
+ *     tags: [Admin - Readings]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Reading ID
+ *         example: "507f1f77bcf86cd799439011"
+ *     responses:
+ *       200:
+ *         description: Reading deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Xóa bài đọc thành công"
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Reading not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 r.delete("/readings/:id", async (req, res) => {
   try {
     const deleted = await Reading.findByIdAndDelete(req.params.id);

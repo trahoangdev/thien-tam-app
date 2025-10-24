@@ -54,7 +54,85 @@ const generateTokens = (userId: string, role: UserRole) => {
   return { accessToken, refreshToken };
 };
 
-// POST /auth/register - User registration
+/**
+ * @swagger
+ * /user-auth/register:
+ *   post:
+ *     summary: Register new user
+ *     description: Register a new user account
+ *     tags: [User Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *               - name
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: User email address
+ *                 example: "user@example.com"
+ *               password:
+ *                 type: string
+ *                 minLength: 6
+ *                 description: User password (min 6 characters)
+ *                 example: "password123"
+ *               name:
+ *                 type: string
+ *                 minLength: 2
+ *                 maxLength: 50
+ *                 description: User full name
+ *                 example: "Nguyễn Văn A"
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Đăng ký thành công"
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       description: User ID
+ *                     email:
+ *                       type: string
+ *                       description: User email
+ *                     name:
+ *                       type: string
+ *                       description: User name
+ *                     role:
+ *                       type: string
+ *                       description: User role
+ *                 accessToken:
+ *                   type: string
+ *                   description: JWT access token
+ *                 refreshToken:
+ *                   type: string
+ *                   description: JWT refresh token
+ *       400:
+ *         description: Bad request - validation error or email exists
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.post('/register', async (req, res) => {
   try {
     const { email, password, name } = registerSchema.parse(req.body);
@@ -86,7 +164,12 @@ router.post('/register', async (req, res) => {
     
     res.status(201).json({
       message: 'Đăng ký thành công',
-      user: user.toJSON(),
+      user: {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+      },
       tokens: {
         accessToken,
         refreshToken,
@@ -105,7 +188,86 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// POST /auth/login - User login
+/**
+ * @swagger
+ * /user-auth/login:
+ *   post:
+ *     summary: User login
+ *     description: Authenticate user and return JWT tokens
+ *     tags: [User Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: User email address
+ *                 example: "user@example.com"
+ *               password:
+ *                 type: string
+ *                 description: User password
+ *                 example: "password123"
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Đăng nhập thành công"
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       description: User ID
+ *                     email:
+ *                       type: string
+ *                       description: User email
+ *                     name:
+ *                       type: string
+ *                       description: User name
+ *                     role:
+ *                       type: string
+ *                       description: User role
+ *                 tokens:
+ *                   type: object
+ *                   properties:
+ *                     accessToken:
+ *                       type: string
+ *                       description: JWT access token
+ *                     refreshToken:
+ *                       type: string
+ *                       description: JWT refresh token
+ *       400:
+ *         description: Bad request - validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: Invalid credentials
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = loginSchema.parse(req.body);
@@ -136,7 +298,12 @@ router.post('/login', async (req, res) => {
     
     res.json({
       message: 'Đăng nhập thành công',
-      user: user.toJSON(),
+      user: {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+      },
       tokens: {
         accessToken,
         refreshToken,
@@ -155,7 +322,56 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// POST /auth/refresh - Refresh access token
+/**
+ * @swagger
+ * /user-auth/refresh:
+ *   post:
+ *     summary: Refresh user token
+ *     description: Refresh user access token using refresh token
+ *     tags: [User Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - refreshToken
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *                 description: Refresh token
+ *                 example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *     responses:
+ *       200:
+ *         description: Token refreshed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 accessToken:
+ *                   type: string
+ *                   description: New JWT access token
+ *       400:
+ *         description: Bad request - missing refresh token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: Invalid refresh token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.post('/refresh', async (req, res) => {
   try {
     const { refreshToken } = req.body;
@@ -183,7 +399,71 @@ router.post('/refresh', async (req, res) => {
   }
 });
 
-// GET /auth/me - Get current user profile
+/**
+ * @swagger
+ * /user-auth/me:
+ *   get:
+ *     summary: Get current user profile
+ *     description: Returns information about the currently authenticated user
+ *     tags: [User Authentication]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved user profile
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       description: User ID
+ *                     email:
+ *                       type: string
+ *                       description: User email
+ *                     name:
+ *                       type: string
+ *                       description: User name
+ *                     role:
+ *                       type: string
+ *                       description: User role
+ *                     preferences:
+ *                       type: object
+ *                       description: User preferences
+ *                     stats:
+ *                       type: object
+ *                       description: User reading statistics
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *                       description: Creation timestamp
+ *                     updatedAt:
+ *                       type: string
+ *                       format: date-time
+ *                       description: Last update timestamp
+ *       401:
+ *         description: Unauthorized - invalid or missing token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.get('/me', requireAuth, async (req, res) => {
   try {
     const user = await User.findById(req.userId).select('-passwordHash');
@@ -193,7 +473,16 @@ router.get('/me', requireAuth, async (req, res) => {
     }
     
     res.json({
-      user: user.toJSON(),
+      user: {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        preferences: user.preferences,
+        stats: user.stats,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      },
     });
   } catch (error) {
     console.error('Get profile error:', error);
@@ -201,7 +490,120 @@ router.get('/me', requireAuth, async (req, res) => {
   }
 });
 
-// PUT /auth/profile - Update user profile
+/**
+ * @swagger
+ * /user-auth/profile:
+ *   put:
+ *     summary: Update user profile
+ *     description: Update user profile information and preferences
+ *     tags: [User Authentication]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 minLength: 2
+ *                 maxLength: 50
+ *                 description: Updated user name
+ *                 example: "Nguyễn Văn B"
+ *               preferences:
+ *                 type: object
+ *                 properties:
+ *                   theme:
+ *                     type: string
+ *                     enum: [light, dark, auto]
+ *                     description: UI theme preference
+ *                   fontSize:
+ *                     type: string
+ *                     enum: [small, medium, large]
+ *                     description: Font size preference
+ *                   lineHeight:
+ *                     type: number
+ *                     minimum: 1.2
+ *                     maximum: 2.0
+ *                     description: Line height preference
+ *                   notifications:
+ *                     type: object
+ *                     properties:
+ *                       dailyReading:
+ *                         type: boolean
+ *                         description: Daily reading notifications
+ *                       weeklyDigest:
+ *                         type: boolean
+ *                         description: Weekly digest notifications
+ *                       newContent:
+ *                         type: boolean
+ *                         description: New content notifications
+ *                   readingGoals:
+ *                     type: object
+ *                     properties:
+ *                       dailyTarget:
+ *                         type: number
+ *                         minimum: 5
+ *                         maximum: 120
+ *                         description: Daily reading target (minutes)
+ *                       weeklyTarget:
+ *                         type: number
+ *                         minimum: 1
+ *                         maximum: 7
+ *                         description: Weekly reading target (days)
+ *     responses:
+ *       200:
+ *         description: Profile updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Cập nhật thông tin thành công"
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       description: User ID
+ *                     email:
+ *                       type: string
+ *                       description: User email
+ *                     name:
+ *                       type: string
+ *                       description: User name
+ *                     preferences:
+ *                       type: object
+ *                       description: User preferences
+ *       400:
+ *         description: Bad request - validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.put('/profile', requireAuth, async (req, res) => {
   try {
     const updateData = updateProfileSchema.parse(req.body);
@@ -238,7 +640,13 @@ router.put('/profile', requireAuth, async (req, res) => {
     
     res.json({
       message: 'Cập nhật thông tin thành công',
-      user: user.toJSON(),
+      user: {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        preferences: user.preferences,
+      },
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -253,7 +661,39 @@ router.put('/profile', requireAuth, async (req, res) => {
   }
 });
 
-// POST /auth/logout - Logout (client-side token removal)
+/**
+ * @swagger
+ * /user-auth/logout:
+ *   post:
+ *     summary: User logout
+ *     description: Logout user (client-side token removal)
+ *     tags: [User Authentication]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Logout successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Đăng xuất thành công"
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.post('/logout', requireAuth, async (req, res) => {
   try {
     // In a more sophisticated system, you might want to blacklist the token
@@ -268,7 +708,73 @@ router.post('/logout', requireAuth, async (req, res) => {
   }
 });
 
-// POST /auth/reading-stats - Update reading statistics
+/**
+ * @swagger
+ * /user-auth/reading-stats:
+ *   post:
+ *     summary: Update reading statistics
+ *     description: Update user reading statistics for a specific reading
+ *     tags: [User Authentication]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - readingId
+ *               - timeSpent
+ *             properties:
+ *               readingId:
+ *                 type: string
+ *                 description: ID of the reading
+ *                 example: "507f1f77bcf86cd799439011"
+ *               timeSpent:
+ *                 type: number
+ *                 minimum: 0
+ *                 description: Time spent reading in minutes
+ *                 example: 15
+ *     responses:
+ *       200:
+ *         description: Reading statistics updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Cập nhật thống kê thành công"
+ *                 stats:
+ *                   type: object
+ *                   description: Updated user reading statistics
+ *       400:
+ *         description: Bad request - missing required fields
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.post('/reading-stats', requireAuth, async (req, res) => {
   try {
     const { readingId, timeSpent } = req.body;
