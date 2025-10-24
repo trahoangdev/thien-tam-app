@@ -251,38 +251,75 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
           // Admin Section
           _SectionHeader(title: 'Quản Trị'),
+
+          // Developer Mode Toggle
           Card(
             elevation: 2,
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: ListTile(
-              leading: Icon(
-                Icons.admin_panel_settings,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              title: const Text(
-                'Admin Panel',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              subtitle: const Text('Quản lý nội dung và người dùng'),
-              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-              onTap: () {
-                // Check if user is already admin
-                if (currentUser != null) {
-                  final userRole = permissions.UserRole.fromString(
-                    currentUser.role.value,
-                  );
-                  if (userRole.canAccessAdminPanel) {
-                    Navigator.of(context).pushNamed('/admin/home');
-                  } else {
-                    // User doesn't have admin rights, go to admin login
-                    Navigator.of(context).pushNamed('/admin/login');
-                  }
-                } else {
-                  // No user logged in, go to admin login
-                  Navigator.of(context).pushNamed('/admin/login');
-                }
+            child: Consumer(
+              builder: (context, ref, child) {
+                final developerMode = ref.watch(developerModeProvider);
+                return SwitchListTile(
+                  secondary: Icon(
+                    Icons.developer_mode,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  title: const Text(
+                    'Nhà phát triển',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: const Text('Bật/tắt chế độ nhà phát triển'),
+                  value: developerMode,
+                  onChanged: (value) async {
+                    final settingsService = ref.read(settingsServiceProvider);
+                    await settingsService.setDeveloperMode(value);
+                    ref.read(developerModeProvider.notifier).state = value;
+                  },
+                );
               },
             ),
+          ),
+
+          // Admin Panel (only visible when developer mode is enabled)
+          Consumer(
+            builder: (context, ref, child) {
+              final developerMode = ref.watch(developerModeProvider);
+              if (!developerMode) return const SizedBox.shrink();
+
+              return Card(
+                elevation: 2,
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: ListTile(
+                  leading: Icon(
+                    Icons.admin_panel_settings,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  title: const Text(
+                    'Admin Panel',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: const Text('Quản lý nội dung và người dùng'),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  onTap: () {
+                    // Check if user is already admin
+                    if (currentUser != null) {
+                      final userRole = permissions.UserRole.fromString(
+                        currentUser.role.value,
+                      );
+                      if (userRole.canAccessAdminPanel) {
+                        Navigator.of(context).pushNamed('/admin/home');
+                      } else {
+                        // User doesn't have admin rights, go to admin login
+                        Navigator.of(context).pushNamed('/admin/login');
+                      }
+                    } else {
+                      // No user logged in, go to admin login
+                      Navigator.of(context).pushNamed('/admin/login');
+                    }
+                  },
+                ),
+              );
+            },
           ),
 
           // Clear Cache Button

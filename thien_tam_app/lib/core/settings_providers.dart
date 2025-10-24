@@ -27,3 +27,8 @@ final notificationsEnabledProvider = StateProvider<bool>((ref) {
 final lineHeightProvider = StateProvider<double>((ref) {
   return ref.read(settingsServiceProvider).getLineHeight();
 });
+
+// Developer mode provider
+final developerModeProvider = StateProvider<bool>((ref) {
+  return ref.read(settingsServiceProvider).getDeveloperMode();
+});

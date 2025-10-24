@@ -72,4 +72,13 @@ class SettingsService {
   Future<void> setLineHeight(double height) async {
     await _box.put('line_height', height);
   }
+
+  // Developer mode
+  bool getDeveloperMode() {
+    return _box.get('developer_mode', defaultValue: false);
+  }
+
+  Future<void> setDeveloperMode(bool enabled) async {
+    await _box.put('developer_mode', enabled);
+  }
 }
