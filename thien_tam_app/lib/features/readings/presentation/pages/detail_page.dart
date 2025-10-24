@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:async';
 import '../providers/reading_providers.dart';
 import '../../data/reading_stats_service.dart';
+import '../../data/models/reading.dart';
 import 'package:intl/intl.dart';
 import 'not_found_page.dart';
 import '../../../../core/settings_providers.dart';
@@ -10,8 +11,9 @@ import '../../../tts/presentation/widgets/tts_widget.dart';
 
 class DetailPage extends ConsumerStatefulWidget {
   final DateTime date;
+  final String? readingId; // Optional reading ID for specific reading
 
-  const DetailPage({super.key, required this.date});
+  const DetailPage({super.key, required this.date, this.readingId});
 
   @override
   ConsumerState<DetailPage> createState() => _DetailPageState();
@@ -62,7 +64,10 @@ class _DetailPageState extends ConsumerState<DetailPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Bài đọc ${DateFormat('dd/MM/yyyy').format(widget.date)}'),
+        // Always show normalized local date on the AppBar title
+        title: Text(
+          'Bài đọc ${DateFormat('dd/MM/yyyy').format(DateTime(widget.date.year, widget.date.month, widget.date.day))}',
+        ),
         centerTitle: true,
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
@@ -81,8 +86,21 @@ class _DetailPageState extends ConsumerState<DetailPage> {
             );
           }
 
-          // Show first reading (or could show list if multiple)
-          final reading = readings.first;
+          // Find specific reading by ID if provided, otherwise show first reading
+          Reading reading;
+          if (widget.readingId != null) {
+            final foundReading = readings
+                .where((r) => r.id == widget.readingId)
+                .firstOrNull;
+            if (foundReading != null) {
+              reading = foundReading;
+            } else {
+              // Fallback to first reading if ID not found
+              reading = readings.first;
+            }
+          } else {
+            reading = readings.first;
+          }
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
@@ -142,7 +160,13 @@ class _DetailPageState extends ConsumerState<DetailPage> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      DateFormat('dd/MM/yyyy', 'vi').format(reading.date),
+                      DateFormat('dd/MM/yyyy', 'vi').format(
+                        DateTime(
+                          reading.date.year,
+                          reading.date.month,
+                          reading.date.day,
+                        ),
+                      ),
                       style: Theme.of(context).textTheme.labelMedium?.copyWith(
                         color: Theme.of(context).colorScheme.secondary,
                       ),

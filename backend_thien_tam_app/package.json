@@ -9,7 +9,12 @@
     "start": "node dist/server.js",
     "seed": "ts-node src/seed/seed.ts",
     "seed:admin": "ts-node src/seed/seedAdmin.ts",
-    "test": "jest"
+    "test": "jest",
+    "test:api": "node test-api.js",
+    "test:create-reading": "node test-create-reading.js",
+    "test:topics-stats": "node test-topics-stats.js",
+    "start-and-test": "node start-and-test.js",
+    "test:postman": "echo 'Import ThienTam_API_Postman_Collection.json into Postman to test API endpoints'"
   },
   "keywords": [
     "buddhist",

@@ -16,8 +16,13 @@ class _NotificationSettingsPageState
   final NotificationService _notificationService = NotificationService();
   late bool _holidayRemindersEnabled;
   late bool _readingRemindersEnabled;
-  late int _holidayReminderTime;
-  late int _readingReminderTime;
+  late bool _dailyReadingRemindersEnabled;
+  late int _holidayReminderHour;
+  late int _holidayReminderMinute;
+  late int _readingReminderHour;
+  late int _readingReminderMinute;
+  late int _dailyReadingReminderHour;
+  late int _dailyReadingReminderMinute;
   late List<String> _enabledHolidayTypes;
 
   @override
@@ -25,8 +30,15 @@ class _NotificationSettingsPageState
     super.initState();
     _holidayRemindersEnabled = _notificationService.holidayRemindersEnabled;
     _readingRemindersEnabled = _notificationService.readingRemindersEnabled;
-    _holidayReminderTime = _notificationService.holidayReminderTime;
-    _readingReminderTime = _notificationService.readingReminderTime;
+    _dailyReadingRemindersEnabled =
+        _notificationService.dailyReadingRemindersEnabled;
+    _holidayReminderHour = _notificationService.holidayReminderHour;
+    _holidayReminderMinute = _notificationService.holidayReminderMinute;
+    _readingReminderHour = _notificationService.readingReminderHour;
+    _readingReminderMinute = _notificationService.readingReminderMinute;
+    _dailyReadingReminderHour = _notificationService.dailyReadingReminderHour;
+    _dailyReadingReminderMinute =
+        _notificationService.dailyReadingReminderMinute;
     _enabledHolidayTypes = List.from(_notificationService.enabledHolidayTypes);
   }
 
@@ -73,7 +85,9 @@ class _NotificationSettingsPageState
                       const Divider(),
                       ListTile(
                         title: const Text('Thời gian nhắc nhở'),
-                        subtitle: Text('${_holidayReminderTime}:00'),
+                        subtitle: Text(
+                          '${_holidayReminderHour.toString().padLeft(2, '0')}:${_holidayReminderMinute.toString().padLeft(2, '0')}',
+                        ),
                         trailing: const Icon(Icons.access_time),
                         onTap: _showTimePickerDialog,
                       ),
@@ -139,7 +153,9 @@ class _NotificationSettingsPageState
                       const Divider(),
                       ListTile(
                         title: const Text('Thời gian nhắc nhở'),
-                        subtitle: Text('${_readingReminderTime}:00'),
+                        subtitle: Text(
+                          '${_readingReminderHour.toString().padLeft(2, '0')}:${_readingReminderMinute.toString().padLeft(2, '0')}',
+                        ),
                         trailing: const Icon(Icons.access_time),
                         onTap: _showReadingTimePickerDialog,
                       ),
@@ -151,10 +167,54 @@ class _NotificationSettingsPageState
 
             const SizedBox(height: 24),
 
-            // Test Notifications Section
+            // Daily Reading Reminders Section
             _buildSectionHeader(
-              'Kiểm tra thông báo',
-              Icons.notifications_active,
+              'Nhắc đọc hằng ngày',
+              Icons.book_online,
+              Theme.of(context).colorScheme.secondary,
+            ),
+            const SizedBox(height: 16),
+
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    SwitchListTile(
+                      title: const Text('Bật nhắc đọc hằng ngày'),
+                      subtitle: const Text(
+                        'Nhận thông báo nhắc đọc bài mỗi ngày',
+                      ),
+                      value: _dailyReadingRemindersEnabled,
+                      onChanged: (value) {
+                        setState(() {
+                          _dailyReadingRemindersEnabled = value;
+                        });
+                      },
+                    ),
+
+                    if (_dailyReadingRemindersEnabled) ...[
+                      const Divider(),
+                      ListTile(
+                        title: const Text('Thời gian nhắc đọc'),
+                        subtitle: Text(
+                          '${_dailyReadingReminderHour.toString().padLeft(2, '0')}:${_dailyReadingReminderMinute.toString().padLeft(2, '0')}',
+                        ),
+                        trailing: const Icon(Icons.access_time),
+                        onTap: _showDailyReadingTimePickerDialog,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Management Section
+            _buildSectionHeader(
+              'Quản lý thông báo',
+              Icons.settings,
               Theme.of(context).colorScheme.tertiary,
             ),
             const SizedBox(height: 16),
@@ -164,17 +224,6 @@ class _NotificationSettingsPageState
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
-                    ListTile(
-                      title: const Text('Gửi thông báo test'),
-                      subtitle: const Text(
-                        'Kiểm tra xem thông báo có hoạt động không',
-                      ),
-                      leading: const Icon(Icons.send),
-                      onTap: _sendTestNotification,
-                    ),
-
-                    const Divider(),
-
                     ListTile(
                       title: const Text('Xem thông báo đã lên lịch'),
                       subtitle: const Text('Kiểm tra các thông báo sắp tới'),
@@ -249,12 +298,16 @@ class _NotificationSettingsPageState
   Future<void> _showTimePickerDialog() async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay(hour: _holidayReminderTime, minute: 0),
+      initialTime: TimeOfDay(
+        hour: _holidayReminderHour,
+        minute: _holidayReminderMinute,
+      ),
     );
 
     if (picked != null) {
       setState(() {
-        _holidayReminderTime = picked.hour;
+        _holidayReminderHour = picked.hour;
+        _holidayReminderMinute = picked.minute;
       });
     }
   }
@@ -262,30 +315,34 @@ class _NotificationSettingsPageState
   Future<void> _showReadingTimePickerDialog() async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay(hour: _readingReminderTime, minute: 0),
+      initialTime: TimeOfDay(
+        hour: _readingReminderHour,
+        minute: _readingReminderMinute,
+      ),
     );
 
     if (picked != null) {
       setState(() {
-        _readingReminderTime = picked.hour;
+        _readingReminderHour = picked.hour;
+        _readingReminderMinute = picked.minute;
       });
     }
   }
 
-  Future<void> _sendTestNotification() async {
-    await _notificationService.showImmediateNotification(
-      title: 'Test Thông báo',
-      body: 'Thông báo đang hoạt động bình thường!',
-      payload: 'test_notification',
+  Future<void> _showDailyReadingTimePickerDialog() async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(
+        hour: _dailyReadingReminderHour,
+        minute: _dailyReadingReminderMinute,
+      ),
     );
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Đã gửi thông báo test'),
-          backgroundColor: Colors.green,
-        ),
-      );
+    if (picked != null) {
+      setState(() {
+        _dailyReadingReminderHour = picked.hour;
+        _dailyReadingReminderMinute = picked.minute;
+      });
     }
   }
 
@@ -341,8 +398,13 @@ class _NotificationSettingsPageState
     await _notificationService.updateSettings(
       holidayRemindersEnabled: _holidayRemindersEnabled,
       readingRemindersEnabled: _readingRemindersEnabled,
-      holidayReminderTime: _holidayReminderTime,
-      readingReminderTime: _readingReminderTime,
+      dailyReadingRemindersEnabled: _dailyReadingRemindersEnabled,
+      holidayReminderHour: _holidayReminderHour,
+      holidayReminderMinute: _holidayReminderMinute,
+      readingReminderHour: _readingReminderHour,
+      readingReminderMinute: _readingReminderMinute,
+      dailyReadingReminderHour: _dailyReadingReminderHour,
+      dailyReadingReminderMinute: _dailyReadingReminderMinute,
       enabledHolidayTypes: _enabledHolidayTypes,
     );
 

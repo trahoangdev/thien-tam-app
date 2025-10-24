@@ -454,10 +454,20 @@ class _BuddhistCalendarWidgetState
                 (reading) => GestureDetector(
                   onTap: () {
                     // Navigate đến DetailPage khi click vào bài đọc cụ thể
+                    // Truyền readingId để hiển thị đúng bài đọc được chọn
+                    final normalizedDate = DateTime(
+                      _selectedDate.year,
+                      _selectedDate.month,
+                      _selectedDate.day,
+                    );
+
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => DetailPage(date: _selectedDate),
+                        builder: (context) => DetailPage(
+                          date: normalizedDate,
+                          readingId: reading.id,
+                        ),
                       ),
                     );
                   },

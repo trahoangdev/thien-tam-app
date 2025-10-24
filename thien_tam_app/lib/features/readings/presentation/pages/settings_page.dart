@@ -23,7 +23,6 @@ class SettingsPage extends ConsumerStatefulWidget {
 class _SettingsPageState extends ConsumerState<SettingsPage> {
   int _tempFontSize = 1;
   double _tempLineHeight = 1.8;
-  bool _tempNotificationsEnabled = true;
   ThemeMode _tempThemeMode = ThemeMode.system;
   bool _hasUnsavedChanges = false;
 
@@ -35,7 +34,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       final ref = this.ref;
       _tempFontSize = ref.read(fontSizeProvider);
       _tempLineHeight = ref.read(lineHeightProvider);
-      _tempNotificationsEnabled = ref.read(notificationsEnabledProvider);
       _tempThemeMode = ref.read(themeModeProvider);
     });
   }
@@ -228,24 +226,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             ),
             const SizedBox(height: 16),
           ],
-
-          const Divider(),
-
-          // Notifications Section
-          _SectionHeader(title: 'Thông Báo'),
-
-          SwitchListTile(
-            secondary: const Icon(Icons.notifications),
-            title: const Text('Nhắc đọc hằng ngày'),
-            subtitle: const Text('Thông báo lúc 7:00 sáng mỗi ngày'),
-            value: _tempNotificationsEnabled,
-            onChanged: (value) {
-              setState(() {
-                _tempNotificationsEnabled = value;
-                _hasUnsavedChanges = true;
-              });
-            },
-          ),
 
           const Divider(),
 
@@ -505,14 +485,11 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                       await settingsService.setFontSize(1);
                       await settingsService.setThemeMode(ThemeMode.system);
                       await settingsService.setLineHeight(1.8);
-                      await settingsService.setNotificationsEnabled(true);
 
                       ref.read(fontSizeProvider.notifier).state = 1;
                       ref.read(themeModeProvider.notifier).state =
                           ThemeMode.system;
                       ref.read(lineHeightProvider.notifier).state = 1.8;
-                      ref.read(notificationsEnabledProvider.notifier).state =
-                          true;
 
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Đã đặt lại cài đặt')),
@@ -631,11 +608,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       await settingsService.setThemeMode(_tempThemeMode);
       ref.read(themeModeProvider.notifier).state = _tempThemeMode;
 
-      // Save notifications
-      await settingsService.setNotificationsEnabled(_tempNotificationsEnabled);
-      ref.read(notificationsEnabledProvider.notifier).state =
-          _tempNotificationsEnabled;
-
       setState(() {
         _hasUnsavedChanges = false;
       });
@@ -667,7 +639,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       _tempFontSize = ref.read(fontSizeProvider);
       _tempLineHeight = ref.read(lineHeightProvider);
       _tempThemeMode = ref.read(themeModeProvider);
-      _tempNotificationsEnabled = ref.read(notificationsEnabledProvider);
       _hasUnsavedChanges = false;
     });
 

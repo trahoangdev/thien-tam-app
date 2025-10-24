@@ -20,9 +20,14 @@ class Reading {
   });
 
   factory Reading.fromJson(Map<String, dynamic> j) {
+    // Normalize incoming date to device local day to avoid timezone drift
+    final parsed = DateTime.parse(j['date']);
+    final local = parsed.toLocal();
+    final normalizedLocalDate = DateTime(local.year, local.month, local.day);
+
     return Reading(
       id: j['_id'] ?? '',
-      date: DateTime.parse(j['date']),
+      date: normalizedLocalDate,
       title: j['title'] ?? '',
       body: j['body'], // Có thể null
       topicSlugs: List<String>.from(j['topicSlugs'] ?? []),

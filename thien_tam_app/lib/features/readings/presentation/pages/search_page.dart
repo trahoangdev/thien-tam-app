@@ -142,8 +142,10 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    DetailPage(date: normalizedDate),
+                                builder: (context) => DetailPage(
+                                  date: normalizedDate,
+                                  readingId: reading.id,
+                                ),
                               ),
                             );
                           },

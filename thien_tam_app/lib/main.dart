@@ -4,7 +4,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'features/readings/presentation/pages/main_shell.dart';
-import 'core/notifications.dart';
+import 'features/notifications/data/notification_service.dart';
 import 'core/settings_providers.dart';
 import 'features/admin/presentation/pages/admin_login_page.dart';
 import 'features/admin/presentation/pages/admin_home_page.dart';
@@ -27,7 +27,7 @@ void main() async {
   await initializeDateFormatting('vi', null);
 
   // Initialize notifications
-  await initNotifications();
+  await NotificationService().initialize();
 
   runApp(
     ProviderScope(

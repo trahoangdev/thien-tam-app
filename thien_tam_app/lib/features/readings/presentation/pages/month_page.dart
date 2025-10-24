@@ -152,8 +152,10 @@ class _MonthPageState extends ConsumerState<MonthPage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    DetailPage(date: normalizedDate),
+                                builder: (context) => DetailPage(
+                                  date: normalizedDate,
+                                  readingId: reading.id,
+                                ),
                               ),
                             );
                           },

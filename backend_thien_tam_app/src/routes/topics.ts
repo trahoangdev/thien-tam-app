@@ -44,17 +44,17 @@ r.get("/topics", async (req, res) => {
       .limit(limit);
 
     // Get reading counts for each topic
-    const topicsWithCounts = await Promise.all(
-      topics.map(async (topic) => {
-        const readingCount = await Reading.countDocuments({ 
-          topicSlugs: topic.slug 
-        });
-        return {
-          ...topic.toObject(),
-          readingCount
-        };
-      })
-    );
+    const topicsWithCounts: any[] = [];
+    for (const topic of topics) {
+      const readingCount = await Reading.countDocuments({ 
+        topicSlugs: topic.slug 
+      });
+      const topicData = topic.toJSON();
+      topicsWithCounts.push({
+        ...topicData,
+        readingCount
+      });
+    }
 
     res.json({
       items: topicsWithCounts,
@@ -62,9 +62,63 @@ r.get("/topics", async (req, res) => {
       page,
       pages: Math.ceil(total / limit),
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error fetching topics:", error);
     res.status(500).json({ message: "Lỗi server" });
+  }
+});
+
+// GET /admin/topics/stats - Get topic statistics
+r.get("/topics/stats", async (req, res) => {
+  try {
+    console.log("📊 Fetching topic statistics...");
+    
+    // Basic topic counts
+    const totalTopics = await Topic.countDocuments();
+    const activeTopics = await Topic.countDocuments({ isActive: true });
+    const inactiveTopics = await Topic.countDocuments({ isActive: false });
+    
+    console.log(`📈 Topic counts: total=${totalTopics}, active=${activeTopics}, inactive=${inactiveTopics}`);
+    
+    // Get topics with most readings (simplified approach)
+    let topTopics = [];
+    try {
+      // Simple approach: get all topics and count readings for each
+      const allTopics = await Topic.find({}).limit(10);
+      topTopics = [];
+      for (const topic of allTopics) {
+        const count = await Reading.countDocuments({ topicSlugs: topic.slug });
+        topTopics.push({
+          slug: topic.slug,
+          name: topic.name,
+          count: count
+        });
+      }
+      
+      // Sort by count descending
+      topTopics.sort((a, b) => b.count - a.count);
+      
+      console.log(`📊 Top topics:`, topTopics);
+    } catch (error: any) {
+      console.warn("⚠️ Error getting top topics:", error.message);
+      topTopics = [];
+    }
+
+    const stats = {
+      totalTopics,
+      activeTopics,
+      inactiveTopics,
+      topTopics: topTopics.filter(t => t.count > 0).slice(0, 10)
+    };
+    
+    console.log("✅ Topic stats generated successfully");
+    res.json(stats);
+  } catch (error: any) {
+    console.error("❌ Error fetching topic stats:", error);
+    res.status(500).json({ 
+      message: "Lỗi server", 
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined 
+    });
   }
 });
 
@@ -82,10 +136,10 @@ r.get("/topics/:id", async (req, res) => {
     });
 
     res.json({
-      ...topic.toObject(),
+      ...(topic.toJSON() as Record<string, any>),
       readingCount
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error fetching topic:", error);
     res.status(500).json({ message: "Lỗi server" });
   }
@@ -190,51 +244,8 @@ r.delete("/topics/:id", async (req, res) => {
     console.log("✅ Deleted topic:", topic.slug, topic.name);
 
     res.json({ message: "Chủ đề đã được xóa" });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error deleting topic:", error);
-    res.status(500).json({ message: "Lỗi server" });
-  }
-});
-
-// GET /admin/topics/stats - Get topic statistics
-r.get("/topics/stats", async (req, res) => {
-  try {
-    const totalTopics = await Topic.countDocuments();
-    const activeTopics = await Topic.countDocuments({ isActive: true });
-    const inactiveTopics = await Topic.countDocuments({ isActive: false });
-    
-    // Get topics with most readings
-    const topTopics = await Reading.aggregate([
-      { $unwind: "$topicSlugs" },
-      { $group: { _id: "$topicSlugs", count: { $sum: 1 } } },
-      { $sort: { count: -1 } },
-      { $limit: 10 },
-      {
-        $lookup: {
-          from: "topics",
-          localField: "_id",
-          foreignField: "slug",
-          as: "topic"
-        }
-      },
-      { $unwind: "$topic" },
-      {
-        $project: {
-          slug: "$_id",
-          name: "$topic.name",
-          count: 1
-        }
-      }
-    ]);
-
-    res.json({
-      totalTopics,
-      activeTopics,
-      inactiveTopics,
-      topTopics
-    });
-  } catch (error) {
-    console.error("Error fetching topic stats:", error);
     res.status(500).json({ message: "Lỗi server" });
   }
 });

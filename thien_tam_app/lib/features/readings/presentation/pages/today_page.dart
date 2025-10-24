@@ -356,18 +356,18 @@ class TodayPageContent extends ConsumerWidget {
               .read(readingStatsProvider.notifier)
               .addReading(readingTimeMinutes: 1);
 
-          // Navigate to detail page with the correct date
-          // If we're viewing today's readings, use current date (normalized to avoid timezone issues)
-          // If we're viewing a specific date, use that date
-          final now = DateTime.now();
-          final targetDate = isToday
-              ? DateTime(now.year, now.month, now.day)
-              : selectedDate!;
+          // Navigate using the reading's actual normalized date
+          final normalizedDate = DateTime(
+            reading.date.year,
+            reading.date.month,
+            reading.date.day,
+          );
 
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => DetailPage(date: targetDate),
+              builder: (context) =>
+                  DetailPage(date: normalizedDate, readingId: reading.id),
             ),
           );
         },
