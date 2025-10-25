@@ -1,16 +1,22 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/book_service.dart';
+import '../../data/book_category_service.dart';
 import '../../data/models/book.dart';
+import '../../data/models/book_category.dart';
 
-// Service provider
+// Service providers
 final bookServiceProvider = Provider<BookService>((ref) {
   return BookService();
 });
 
-// Categories provider
+final bookCategoryServiceProvider = Provider<BookCategoryService>((ref) {
+  return BookCategoryService();
+});
+
+// Categories provider (now using BookCategory model)
 final bookCategoriesProvider = FutureProvider<List<BookCategory>>((ref) async {
-  final service = ref.read(bookServiceProvider);
-  return await service.getCategories();
+  final service = ref.read(bookCategoryServiceProvider);
+  return await service.getCategories(isActive: true);
 });
 
 // Popular books provider

@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
-import Book, { BookCategory } from '../models/Book';
+import Book from '../models/Book';
+import { BookCategory } from '../models/BookCategory';
+import { updateCategoryBookCount } from './bookCategoryController';
 import cloudinaryService from '../services/cloudinaryService';
 import fs from 'fs';
 import path from 'path';
@@ -12,16 +14,7 @@ const createBookSchema = z.object({
   author: z.string().max(200).optional(),
   translator: z.string().max(200).optional(),
   description: z.string().max(2000).optional(),
-  category: z.enum([
-    'sutra',
-    'commentary',
-    'biography',
-    'practice',
-    'dharma-talk',
-    'history',
-    'philosophy',
-    'other',
-  ]),
+  category: z.string().min(1), // Now accepts category ID
   tags: z.array(z.string()).max(15).optional(),
   bookLanguage: z.enum(['vi', 'en', 'zh', 'pi', 'sa']).optional(),
   publisher: z.string().max(200).optional(),
@@ -38,16 +31,7 @@ const createBookFromUrlSchema = z.object({
   author: z.string().max(200).optional(),
   translator: z.string().max(200).optional(),
   description: z.string().max(2000).optional(),
-  category: z.enum([
-    'sutra',
-    'commentary',
-    'biography',
-    'practice',
-    'dharma-talk',
-    'history',
-    'philosophy',
-    'other',
-  ]),
+  category: z.string().min(1), // Now accepts category ID
   tags: z.array(z.string()).max(15).optional(),
   bookLanguage: z.enum(['vi', 'en', 'zh', 'pi', 'sa']).optional(),
   publisher: z.string().max(200).optional(),
@@ -63,16 +47,7 @@ const updateBookSchema = z.object({
   author: z.string().max(200).optional(),
   translator: z.string().max(200).optional(),
   description: z.string().max(2000).optional(),
-  category: z.enum([
-    'sutra',
-    'commentary',
-    'biography',
-    'practice',
-    'dharma-talk',
-    'history',
-    'philosophy',
-    'other',
-  ]).optional(),
+  category: z.string().min(1).optional(), // Now accepts category ID
   tags: z.array(z.string()).max(15).optional(),
   bookLanguage: z.enum(['vi', 'en', 'zh', 'pi', 'sa']).optional(),
   publisher: z.string().max(200).optional(),
@@ -118,6 +93,12 @@ export const uploadBook = async (req: Request, res: Response) => {
     // Validate data
     const validatedData = createBookSchema.parse(bodyData);
 
+    // Validate category exists
+    const category = await BookCategory.findById(validatedData.category);
+    if (!category) {
+      return res.status(400).json({ message: 'Invalid category ID' });
+    }
+
     // Save PDF to temp file
     fs.writeFileSync(tempPdfPath, pdfFile.buffer);
 
@@ -152,6 +133,9 @@ export const uploadBook = async (req: Request, res: Response) => {
     });
 
     await book.save();
+
+    // Update category book count
+    await updateCategoryBookCount(validatedData.category);
 
     // Clean up temp files
     fs.unlinkSync(tempPdfPath);
@@ -195,6 +179,12 @@ export const createBookFromUrl = async (req: Request, res: Response) => {
   try {
     const validatedData = createBookFromUrlSchema.parse(req.body);
 
+    // Validate category exists
+    const category = await BookCategory.findById(validatedData.category);
+    if (!category) {
+      return res.status(400).json({ message: 'Invalid category ID' });
+    }
+
     // Extract public IDs from URLs
     const pdfPublicId = extractPublicIdFromUrl(validatedData.pdfUrl);
     const coverPublicId = validatedData.coverImageUrl
@@ -225,6 +215,9 @@ export const createBookFromUrl = async (req: Request, res: Response) => {
     });
 
     await book.save();
+
+    // Update category book count
+    await updateCategoryBookCount(validatedData.category);
 
     res.status(201).json({
       message: 'Book created successfully from URL',
@@ -288,6 +281,7 @@ export const getAllBooks = async (req: Request, res: Response) => {
     // Execute query
     const books = await Book.find(filter)
       .populate('uploadedBy', 'username email')
+      .populate('category', 'name nameEn icon color')
       .sort(sort)
       .skip((p - 1) * l)
       .limit(l)
@@ -315,7 +309,9 @@ export const getAllBooks = async (req: Request, res: Response) => {
  */
 export const getBookById = async (req: Request, res: Response) => {
   try {
-    const book = await Book.findById(req.params.id).populate('uploadedBy', 'username email');
+    const book = await Book.findById(req.params.id)
+      .populate('uploadedBy', 'username email')
+      .populate('category', 'name nameEn icon color description');
 
     if (!book) {
       return res.status(404).json({ message: 'Book not found' });
@@ -338,13 +334,30 @@ export const updateBook = async (req: Request, res: Response) => {
   try {
     const validatedData = updateBookSchema.parse(req.body);
 
+    // If category is being changed, validate it exists
+    if (validatedData.category) {
+      const category = await BookCategory.findById(validatedData.category);
+      if (!category) {
+        return res.status(400).json({ message: 'Invalid category ID' });
+      }
+    }
+
+    // Get old book data to check if category changed
+    const oldBook = await Book.findById(req.params.id);
+    if (!oldBook) {
+      return res.status(404).json({ message: 'Book not found' });
+    }
+    const oldCategoryId = oldBook.category.toString();
+
     const book = await Book.findByIdAndUpdate(req.params.id, validatedData, {
       new: true,
       runValidators: true,
     });
 
-    if (!book) {
-      return res.status(404).json({ message: 'Book not found' });
+    // Update book counts if category changed
+    if (validatedData.category && validatedData.category !== oldCategoryId) {
+      await updateCategoryBookCount(oldCategoryId);
+      await updateCategoryBookCount(validatedData.category);
     }
 
     res.json({
@@ -379,6 +392,8 @@ export const deleteBook = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Book not found' });
     }
 
+    const categoryId = book.category.toString();
+
     // Delete PDF from Cloudinary
     await cloudinaryService.deletePDF(book.cloudinaryPublicId);
 
@@ -389,6 +404,9 @@ export const deleteBook = async (req: Request, res: Response) => {
 
     // Delete book record
     await Book.findByIdAndDelete(req.params.id);
+
+    // Update category book count
+    await updateCategoryBookCount(categoryId);
 
     res.json({ message: 'Book deleted successfully' });
   } catch (error: any) {
@@ -447,26 +465,6 @@ export const incrementViewCount = async (req: Request, res: Response) => {
 };
 
 /**
- * Get book categories
- */
-export const getCategories = async (req: Request, res: Response) => {
-  try {
-    const categories = Object.values(BookCategory).map((cat) => ({
-      value: cat,
-      label: getCategoryLabel(cat),
-    }));
-
-    res.json({ categories });
-  } catch (error: any) {
-    console.error('[BOOK] Get categories error:', error);
-    res.status(500).json({
-      message: 'Failed to fetch categories',
-      error: error.message,
-    });
-  }
-};
-
-/**
  * Get popular books by download count
  */
 export const getPopularBooks = async (req: Request, res: Response) => {
@@ -477,6 +475,7 @@ export const getPopularBooks = async (req: Request, res: Response) => {
       .sort({ downloadCount: -1, viewCount: -1 })
       .limit(limit)
       .populate('uploadedBy', 'username email')
+      .populate('category', 'name nameEn icon color')
       .lean();
 
     res.json({ books });
@@ -498,19 +497,5 @@ function extractPublicIdFromUrl(url: string): string {
   return versionIndex !== -1
     ? parts.slice(versionIndex + 1, -1).join('/') + '/' + fileName
     : fileName;
-}
-
-function getCategoryLabel(category: BookCategory): string {
-  const labels: Record<BookCategory, string> = {
-    [BookCategory.SUTRA]: 'Kinh điển',
-    [BookCategory.COMMENTARY]: 'Luận giải',
-    [BookCategory.BIOGRAPHY]: 'Tiểu sử, truyện',
-    [BookCategory.PRACTICE]: 'Hướng dẫn tu tập',
-    [BookCategory.DHARMA_TALK]: 'Pháp thoại',
-    [BookCategory.HISTORY]: 'Lịch sử Phật giáo',
-    [BookCategory.PHILOSOPHY]: 'Triết học',
-    [BookCategory.OTHER]: 'Khác',
-  };
-  return labels[category] || category;
 }
 

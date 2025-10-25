@@ -71,17 +71,6 @@ class BookService {
     }
   }
 
-  /// Get book categories
-  Future<List<BookCategory>> getCategories() async {
-    try {
-      final response = await _dio.get('/books/categories');
-      final List<dynamic> data = response.data['categories'];
-      return data.map((c) => BookCategory.fromJson(c)).toList();
-    } catch (e) {
-      throw Exception('Failed to fetch categories: $e');
-    }
-  }
-
   /// Get popular books
   Future<List<Book>> getPopularBooks({int limit = 10}) async {
     try {

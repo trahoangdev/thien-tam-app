@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import '../providers/book_providers.dart';
+import '../providers/book_category_providers.dart';
 import '../../../books/data/models/book.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 
@@ -24,7 +25,7 @@ class _AdminBookFormPageState extends ConsumerState<AdminBookFormPage> {
   final _cloudinaryUrlController = TextEditingController();
   final _coverUrlController = TextEditingController();
 
-  String _selectedCategory = 'sutra';
+  String? _selectedCategory;
   String _selectedLanguage = 'vi';
   bool _isPublic = true;
   bool _isLoading = false;
@@ -43,7 +44,7 @@ class _AdminBookFormPageState extends ConsumerState<AdminBookFormPage> {
       _descriptionController.text = widget.book!.description ?? '';
       _tagsController.text = widget.book!.tags.join(', ');
       _pageCountController.text = widget.book!.pageCount?.toString() ?? '';
-      _selectedCategory = widget.book!.category;
+      _selectedCategory = widget.book!.categoryId; // Get category ID
       _selectedLanguage = widget.book!.bookLanguage;
       _isPublic = widget.book!.isPublic;
     }
@@ -89,6 +90,12 @@ class _AdminBookFormPageState extends ConsumerState<AdminBookFormPage> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
+    // Validate category is selected
+    if (_selectedCategory == null) {
+      _showSnackBar('Vui lòng chọn thể loại', isError: true);
+      return;
+    }
+
     // Validation for new book
     if (widget.book == null) {
       if (_useCloudinaryUrl) {
@@ -133,7 +140,7 @@ class _AdminBookFormPageState extends ConsumerState<AdminBookFormPage> {
                 ? null
                 : _coverUrlController.text,
             title: _titleController.text,
-            category: _selectedCategory,
+            category: _selectedCategory!,
             author: _authorController.text.isEmpty
                 ? null
                 : _authorController.text,
@@ -151,7 +158,7 @@ class _AdminBookFormPageState extends ConsumerState<AdminBookFormPage> {
             pdfPath: _selectedPdfPath!,
             coverPath: _selectedCoverPath,
             title: _titleController.text,
-            category: _selectedCategory,
+            category: _selectedCategory!,
             author: _authorController.text.isEmpty
                 ? null
                 : _authorController.text,
@@ -419,36 +426,82 @@ class _AdminBookFormPageState extends ConsumerState<AdminBookFormPage> {
             ),
             const SizedBox(height: 16),
 
-            // Category
-            DropdownButtonFormField<String>(
-              value: _selectedCategory,
-              decoration: const InputDecoration(
-                labelText: 'Thể loại *',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.category),
-              ),
-              items: const [
-                DropdownMenuItem(value: 'sutra', child: Text('Kinh điển')),
-                DropdownMenuItem(value: 'commentary', child: Text('Chú giải')),
-                DropdownMenuItem(value: 'biography', child: Text('Tiểu sử')),
-                DropdownMenuItem(value: 'practice', child: Text('Tu tập')),
-                DropdownMenuItem(
-                  value: 'dharma-talk',
-                  child: Text('Pháp thoại'),
-                ),
-                DropdownMenuItem(value: 'history', child: Text('Lịch sử')),
-                DropdownMenuItem(value: 'philosophy', child: Text('Triết học')),
-                DropdownMenuItem(value: 'other', child: Text('Khác')),
-              ],
-              onChanged: _isLoading
-                  ? null
-                  : (value) {
-                      if (value != null) {
+            // Category - Load from API
+            Consumer(
+              builder: (context, ref, child) {
+                final categoriesState = ref.watch(bookCategoryNotifierProvider);
+
+                return categoriesState.when(
+                  data: (categories) {
+                    if (categories.isEmpty) {
+                      return const Card(
+                        child: Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Text(
+                            'Chưa có danh mục. Vui lòng tạo danh mục trước.',
+                          ),
+                        ),
+                      );
+                    }
+
+                    // Auto-select first category if none selected
+                    if (_selectedCategory == null && categories.isNotEmpty) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
                         setState(() {
-                          _selectedCategory = value;
+                          _selectedCategory = categories.first.id;
                         });
-                      }
-                    },
+                      });
+                    }
+
+                    return DropdownButtonFormField<String>(
+                      value: _selectedCategory,
+                      decoration: const InputDecoration(
+                        labelText: 'Thể loại *',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.category),
+                      ),
+                      items: categories.map((category) {
+                        return DropdownMenuItem<String>(
+                          value: category.id,
+                          child: Row(
+                            children: [
+                              Text(
+                                category.icon,
+                                style: const TextStyle(fontSize: 20),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(child: Text(category.name)),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Vui lòng chọn thể loại';
+                        }
+                        return null;
+                      },
+                      onChanged: _isLoading
+                          ? null
+                          : (value) {
+                              if (value != null) {
+                                setState(() {
+                                  _selectedCategory = value;
+                                });
+                              }
+                            },
+                    );
+                  },
+                  loading: () => const LinearProgressIndicator(),
+                  error: (error, stack) => Card(
+                    color: Colors.red.shade50,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Text('Lỗi load danh mục: $error'),
+                    ),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 16),
 

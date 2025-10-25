@@ -1,24 +1,12 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
-// Book categories
-export enum BookCategory {
-  SUTRA = 'sutra',              // Kinh điển
-  COMMENTARY = 'commentary',     // Luận giải
-  BIOGRAPHY = 'biography',       // Tiểu sử, truyện
-  PRACTICE = 'practice',         // Hướng dẫn tu tập
-  DHARMA_TALK = 'dharma-talk',   // Pháp thoại
-  HISTORY = 'history',           // Lịch sử Phật giáo
-  PHILOSOPHY = 'philosophy',     // Triết học
-  OTHER = 'other',               // Khác
-}
-
 // Book interface
 export interface IBook extends Document {
   title: string;
   author?: string;
   translator?: string;
   description?: string;
-  category: BookCategory;
+  category: mongoose.Types.ObjectId; // Reference to BookCategory
   tags: string[];
   bookLanguage: string;
   
@@ -81,8 +69,8 @@ const BookSchema = new Schema<IBook>(
       maxlength: 2000,
     },
     category: {
-      type: String,
-      enum: Object.values(BookCategory),
+      type: Schema.Types.ObjectId,
+      ref: 'BookCategory',
       required: true,
       index: true,
     },

@@ -9,6 +9,7 @@ import 'admin_stats_page.dart';
 import 'admin_audio_list_page.dart';
 import 'admin_users_list_page.dart';
 import 'admin_books_list_page.dart';
+import 'admin_book_categories_list_page.dart';
 import '../../../../core/app_lifecycle.dart';
 
 class AdminHomePage extends ConsumerWidget {
@@ -211,6 +212,21 @@ class AdminHomePage extends ConsumerWidget {
                       context,
                       MaterialPageRoute(
                         builder: (context) => const AdminBooksListPage(),
+                      ),
+                    );
+                  },
+                ),
+                _buildActionCard(
+                  context,
+                  icon: Icons.category,
+                  title: 'Danh mục Sách',
+                  subtitle: 'Quản lý danh mục',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            const AdminBookCategoriesListPage(),
                       ),
                     );
                   },

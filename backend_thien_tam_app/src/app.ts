@@ -13,6 +13,7 @@ import ttsRouter from "./routes/tts";
 import chatRouter from "./routes/chat";
 import audioRouter from "./routes/audio";
 import booksRouter from "./routes/books";
+import bookCategoriesRouter from "./routes/bookCategories";
 import { requireAuth, requireRoles } from "./middlewares/auth";
 import { errorHandler } from "./middlewares/error";
 import { setupSwagger } from "./config/swagger";
@@ -48,6 +49,7 @@ app.use("/tts", ttsRouter); // Text-to-speech routes
 app.use("/chat", chatRouter); // Gemini chat routes
 app.use("/audio", audioRouter); // Audio library routes
 app.use("/books", booksRouter); // Books library routes
+app.use("/book-categories", bookCategoriesRouter); // Book categories routes
 app.get("/healthz", (_req, res) => res.json({ ok: true }));
 
 // Auth routes (with stricter rate limit)

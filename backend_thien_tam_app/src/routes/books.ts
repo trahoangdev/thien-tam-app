@@ -272,19 +272,7 @@ router.post('/from-url', requireAuth, bookController.createBookFromUrl);
  */
 router.get('/', bookController.getAllBooks);
 
-/**
- * @swagger
- * /books/categories:
- *   get:
- *     summary: Get all book categories
- *     tags: [Books Library]
- *     responses:
- *       200:
- *         description: List of categories
- *       500:
- *         description: Server error
- */
-router.get('/categories', bookController.getCategories);
+// Note: Book categories endpoint moved to /book-categories route
 
 /**
  * @swagger

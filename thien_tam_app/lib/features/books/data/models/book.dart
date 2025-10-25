@@ -1,10 +1,12 @@
+import 'book_category.dart' as cat;
+
 class Book {
   final String id;
   final String title;
   final String? author;
   final String? translator;
   final String? description;
-  final String category;
+  final dynamic category; // Can be String (ID) or BookCategory object
   final List<String> tags;
   final String bookLanguage;
 
@@ -64,13 +66,25 @@ class Book {
   });
 
   factory Book.fromJson(Map<String, dynamic> json) {
+    // Parse category - can be String (ID) or object
+    dynamic categoryValue;
+    if (json['category'] is String) {
+      categoryValue = json['category'];
+    } else if (json['category'] is Map) {
+      categoryValue = cat.BookCategory.fromJson(
+        json['category'] as Map<String, dynamic>,
+      );
+    } else {
+      categoryValue = 'other';
+    }
+
     return Book(
       id: json['_id'] ?? json['id'] ?? '',
       title: json['title'] ?? '',
       author: json['author'],
       translator: json['translator'],
       description: json['description'],
-      category: json['category'] ?? 'other',
+      category: categoryValue,
       tags:
           (json['tags'] as List<dynamic>?)?.map((e) => e.toString()).toList() ??
           [],
@@ -106,6 +120,23 @@ class Book {
     );
   }
 
+  // Get category ID (whether category is String or BookCategory object)
+  String get categoryId {
+    if (category is cat.BookCategory) {
+      return (category as cat.BookCategory).id;
+    }
+    return category.toString();
+  }
+
+  // Get category name for display
+  String get categoryLabel {
+    if (category is cat.BookCategory) {
+      return (category as cat.BookCategory).name;
+    }
+    // Fallback for old string categories
+    return categoryLabelLegacy;
+  }
+
   Map<String, dynamic> toJson() {
     return {
       '_id': id,
@@ -113,7 +144,9 @@ class Book {
       'author': author,
       'translator': translator,
       'description': description,
-      'category': category,
+      'category': category is cat.BookCategory
+          ? (category as cat.BookCategory).id
+          : category,
       'tags': tags,
       'bookLanguage': bookLanguage,
       'cloudinaryPublicId': cloudinaryPublicId,
@@ -152,9 +185,10 @@ class Book {
     return '${(fileSize / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
 
-  // Category label in Vietnamese
-  String get categoryLabel {
-    switch (category) {
+  // Category label in Vietnamese (legacy fallback)
+  String get categoryLabelLegacy {
+    final catStr = category.toString();
+    switch (catStr) {
       case 'sutra':
         return 'Kinh điển';
       case 'commentary':
@@ -191,26 +225,4 @@ class Book {
         return bookLanguage;
     }
   }
-}
-
-class BookCategory {
-  final String value;
-  final String label;
-
-  const BookCategory({required this.value, required this.label});
-
-  factory BookCategory.fromJson(Map<String, dynamic> json) {
-    return BookCategory(value: json['value'] ?? '', label: json['label'] ?? '');
-  }
-
-  static List<BookCategory> get all => [
-    const BookCategory(value: 'sutra', label: 'Kinh điển'),
-    const BookCategory(value: 'commentary', label: 'Luận giải'),
-    const BookCategory(value: 'biography', label: 'Tiểu sử, truyện'),
-    const BookCategory(value: 'practice', label: 'Hướng dẫn tu tập'),
-    const BookCategory(value: 'dharma-talk', label: 'Pháp thoại'),
-    const BookCategory(value: 'history', label: 'Lịch sử Phật giáo'),
-    const BookCategory(value: 'philosophy', label: 'Triết học'),
-    const BookCategory(value: 'other', label: 'Khác'),
-  ];
 }
