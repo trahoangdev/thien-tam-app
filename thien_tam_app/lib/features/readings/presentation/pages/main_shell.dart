@@ -9,6 +9,7 @@ import '../../../auth/presentation/pages/login_page.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../auth/presentation/providers/permission_providers.dart'
     as permissions;
+import '../../../chat/presentation/pages/zen_master_chat_page.dart';
 
 /// Shell chính với Bottom Navigation
 class MainShell extends ConsumerStatefulWidget {
@@ -133,15 +134,39 @@ class _MainShellState extends ConsumerState<MainShell> {
         ),
       ),
       floatingActionButton: _currentIndex == 0
-          ? FloatingActionButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const SettingsPage()),
-                );
-              },
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              child: const Icon(Icons.settings, color: Colors.white),
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Zen Master Chat FAB
+                FloatingActionButton(
+                  heroTag: 'zen_master',
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ZenMasterChatPage(),
+                      ),
+                    );
+                  },
+                  backgroundColor: Theme.of(context).colorScheme.secondary,
+                  child: const Icon(Icons.spa, color: Colors.white),
+                ),
+                const SizedBox(height: 12),
+                // Settings FAB
+                FloatingActionButton(
+                  heroTag: 'settings',
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SettingsPage(),
+                      ),
+                    );
+                  },
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  child: const Icon(Icons.settings, color: Colors.white),
+                ),
+              ],
             )
           : null,
     );
