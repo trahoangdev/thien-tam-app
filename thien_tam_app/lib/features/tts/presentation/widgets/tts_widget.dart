@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/tts_providers.dart';
 import 'voice_selector_widget.dart';
-import '../../data/tts_service.dart';
 
 class TTSWidget extends ConsumerWidget {
   final String text;
@@ -304,21 +303,7 @@ class TTSWidget extends ConsumerWidget {
                   // Voice Selector
                   if (showVoiceSelector) ...[
                     const SizedBox(height: 16),
-                    VoiceSelectorWidget(
-                      currentVoiceId:
-                          voiceId ??
-                          TTSService.vietnameseVoices[TTSService
-                              .defaultVietnameseVoice]!,
-                      onVoiceChanged: (newVoiceId) {
-                        // Stop current audio if playing
-                        if (audioState.isPlaying || audioState.isPaused) {
-                          ref
-                              .read(audioPlayerStateProvider.notifier)
-                              .stopAudio();
-                        }
-                        // Note: Voice change will take effect on next play
-                      },
-                    ),
+                    const VoiceSelectorWidget(),
                   ],
                 ],
               ),

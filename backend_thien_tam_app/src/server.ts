@@ -34,6 +34,8 @@ connectDB(MONGO_URI).then(() => {
     console.log(`\n⚠️  ElevenLabs API Key: ${process.env.ELEVENLABS_API_KEY ? '✅ Configured' : '❌ Not configured'}`);
     const geminiKey = process.env.GOOGLE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
     console.log(`⚠️  Gemini API Key: ${geminiKey ? '✅ Configured' : '❌ Not configured'}`);
+    const cloudinaryConfigured = process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET;
+    console.log(`⚠️  Cloudinary: ${cloudinaryConfigured ? '✅ Configured' : '❌ Not configured'}`);
   });
 });
 

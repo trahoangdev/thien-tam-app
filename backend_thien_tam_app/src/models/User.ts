@@ -4,8 +4,6 @@ import bcrypt from 'bcrypt';
 // User roles for regular users
 export enum UserRole {
   USER = 'USER',
-  PREMIUM_USER = 'PREMIUM_USER',
-  VIP_USER = 'VIP_USER',
 }
 
 // User preferences

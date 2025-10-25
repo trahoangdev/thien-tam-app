@@ -4,9 +4,7 @@ import 'auth_providers.dart';
 // Enum for user roles with clear permissions
 enum UserRole {
   guest('GUEST', 'Khách', 0),
-  user('USER', 'Người dùng', 1),
-  editor('EDITOR', 'Biên tập viên', 2),
-  admin('ADMIN', 'Quản trị viên', 3);
+  user('USER', 'Người dùng', 1);
 
   const UserRole(this.value, this.displayName, this.level);
   final String value;
@@ -15,10 +13,6 @@ enum UserRole {
 
   static UserRole fromString(String value) {
     switch (value) {
-      case 'ADMIN':
-        return UserRole.admin;
-      case 'EDITOR':
-        return UserRole.editor;
       case 'USER':
         return UserRole.user;
       case 'GUEST':
@@ -32,16 +26,16 @@ enum UserRole {
   bool get canBookmark => level >= UserRole.user.level;
   bool get canViewHistory => level >= UserRole.user.level;
   bool get canUpdateProfile => level >= UserRole.user.level;
-  bool get canManageContent => level >= UserRole.editor.level;
-  bool get canManageUsers => level >= UserRole.admin.level;
-  bool get canAccessAdminPanel => level >= UserRole.editor.level;
-  bool get canDeleteContent => level >= UserRole.admin.level;
+  bool get canManageContent => false; // Không có premium nữa
+  bool get canManageUsers => false; // Không có VIP nữa
+  bool get canAccessAdminPanel => false; // User thường không access admin
+  bool get canDeleteContent => false;
 
   // Role hierarchy checks
   bool get isGuest => this == UserRole.guest;
   bool get isUser => level >= UserRole.user.level;
-  bool get isEditor => level >= UserRole.editor.level;
-  bool get isAdmin => level >= UserRole.admin.level;
+  bool get isPremium => false;
+  bool get isVip => false;
 }
 
 // Permission service

@@ -22,6 +22,12 @@ export interface TTSResponse {
 class ElevenLabsService {
   private apiKey: string;
   private baseUrl = 'https://api.elevenlabs.io/v1';
+  
+  // Available Vietnamese voices
+  public readonly voices = {
+    MALE_DEFAULT: 'DXiwi9uoxet6zAiZXynP',    // Male Vietnamese voice (default)
+    FEMALE_CALM: 'DvG3I1kDzdBY3u4EzYh6',     // Female Vietnamese voice (calm, gentle)
+  };
 
   constructor() {
     this.apiKey = process.env.ELEVENLABS_API_KEY || '';
@@ -36,7 +42,8 @@ class ElevenLabsService {
     }
 
     try {
-      const voiceId = request.voiceId || 'DXiwi9uoxet6zAiZXynP'; // Default Vietnamese voice
+      // Use provided voiceId or default to female voice for Buddhist readings
+      const voiceId = request.voiceId || this.voices.FEMALE_CALM; // Default: calm female voice
       const modelId = request.modelId || 'eleven_flash_v2_5'; // Fastest model with Vietnamese support
       
       const voiceSettings = {
@@ -118,6 +125,26 @@ class ElevenLabsService {
   // Check if service is properly configured
   isConfigured(): boolean {
     return !!this.apiKey;
+  }
+
+  // Get available voice options for the app
+  getAvailableVoices() {
+    return [
+      {
+        id: this.voices.FEMALE_CALM,
+        name: 'Giọng nữ nhẹ nhàng',
+        description: 'Giọng nữ trầm, ấm áp, phù hợp cho bài đọc Phật giáo',
+        gender: 'female',
+        isDefault: true,
+      },
+      {
+        id: this.voices.MALE_DEFAULT,
+        name: 'Giọng nam chuẩn',
+        description: 'Giọng nam tiếng Việt chuẩn',
+        gender: 'male',
+        isDefault: false,
+      },
+    ];
   }
 }
 

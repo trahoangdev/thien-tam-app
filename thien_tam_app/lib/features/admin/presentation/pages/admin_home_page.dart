@@ -6,6 +6,9 @@ import 'admin_readings_list_page.dart';
 import 'admin_reading_form_page.dart';
 import 'admin_topics_list_page.dart';
 import 'admin_stats_page.dart';
+import 'admin_audio_list_page.dart';
+import 'admin_users_list_page.dart';
+import 'admin_books_list_page.dart';
 import '../../../../core/app_lifecycle.dart';
 
 class AdminHomePage extends ConsumerWidget {
@@ -166,6 +169,48 @@ class AdminHomePage extends ConsumerWidget {
                       context,
                       MaterialPageRoute(
                         builder: (context) => const AdminTopicsListPage(),
+                      ),
+                    );
+                  },
+                ),
+                _buildActionCard(
+                  context,
+                  icon: Icons.library_music,
+                  title: 'Quản lý Audio',
+                  subtitle: 'Thư viện âm thanh',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AdminAudioListPage(),
+                      ),
+                    );
+                  },
+                ),
+                _buildActionCard(
+                  context,
+                  icon: Icons.people,
+                  title: 'Quản lý Người dùng',
+                  subtitle: 'Xem, sửa, khóa user',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AdminUsersListPage(),
+                      ),
+                    );
+                  },
+                ),
+                _buildActionCard(
+                  context,
+                  icon: Icons.menu_book,
+                  title: 'Quản lý Kinh Sách',
+                  subtitle: 'Thư viện PDF',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AdminBooksListPage(),
                       ),
                     );
                   },

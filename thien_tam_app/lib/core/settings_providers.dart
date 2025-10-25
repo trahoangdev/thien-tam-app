@@ -32,3 +32,8 @@ final lineHeightProvider = StateProvider<double>((ref) {
 final developerModeProvider = StateProvider<bool>((ref) {
   return ref.read(settingsServiceProvider).getDeveloperMode();
 });
+
+// TTS Voice ID provider
+final ttsVoiceIdProvider = StateProvider<String>((ref) {
+  return ref.read(settingsServiceProvider).getTTSVoiceId();
+});

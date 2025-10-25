@@ -41,8 +41,8 @@ const ttsRequestSchema = z.object({
  *                 example: "Chào mừng bạn đến với ứng dụng Thiền Tâm"
  *               voiceId:
  *                 type: string
- *                 description: Voice ID for TTS (optional, uses default Vietnamese voice)
- *                 example: "DXiwi9uoxet6zAiZXynP"
+ *                 description: Voice ID for TTS (optional, defaults to female voice DvG3I1kDzdBY3u4EzYh6)
+ *                 example: "DvG3I1kDzdBY3u4EzYh6"
  *               modelId:
  *                 type: string
  *                 description: Model ID for TTS (optional, uses default model)
@@ -195,14 +195,8 @@ r.post('/text-to-speech', async (req, res) => {
  */
 r.get('/voices', async (req, res) => {
   try {
-    if (!elevenLabsService.isConfigured()) {
-      return res.status(503).json({
-        message: 'Text-to-speech service is not configured',
-        voices: [],
-      });
-    }
-
-    const voices = await elevenLabsService.getVoices();
+    // Return app-specific voices (2 Vietnamese voices only)
+    const voices = elevenLabsService.getAvailableVoices();
     res.json({ voices });
   } catch (error: any) {
     console.error('Get voices error:', error);

@@ -141,7 +141,7 @@ router.post('/register', async (req, res) => {
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ 
-        message: 'Email đã được sử dụng',
+        message: 'Tài khoản này đã được đăng ký. Vui lòng thử lại!',
         code: 'EMAIL_EXISTS'
       });
     }

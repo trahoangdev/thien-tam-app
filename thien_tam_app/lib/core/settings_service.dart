@@ -81,4 +81,13 @@ class SettingsService {
   Future<void> setDeveloperMode(bool enabled) async {
     await _box.put('developer_mode', enabled);
   }
+
+  // TTS Voice (default: female calm voice)
+  String getTTSVoiceId() {
+    return _box.get('tts_voice_id', defaultValue: 'DvG3I1kDzdBY3u4EzYh6');
+  }
+
+  Future<void> setTTSVoiceId(String voiceId) async {
+    await _box.put('tts_voice_id', voiceId);
+  }
 }

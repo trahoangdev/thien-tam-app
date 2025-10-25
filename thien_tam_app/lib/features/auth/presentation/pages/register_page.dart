@@ -53,10 +53,23 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
           }
         });
       } else if (next == AuthState.error) {
+        // Customize error message based on error content
+        String errorMessage =
+            formState.error ??
+            'Tài khoản này đã được đăng ký. Vui lòng thử lại!';
+
+        // Check if error is about existing email
+        if (errorMessage.contains('Email đã được sử dụng') ||
+            errorMessage.contains('EMAIL_EXISTS') ||
+            errorMessage.contains('email') && errorMessage.contains('đã')) {
+          errorMessage = 'Tài khoản này đã được đăng ký. Vui lòng thử lại!';
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(formState.error ?? 'Đăng ký thất bại'),
+            content: Text(errorMessage),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
           ),
         );
       }

@@ -1,202 +1,268 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/tts_service.dart';
+import '../../../../core/settings_providers.dart';
+
+// Provider for available voices
+final appVoicesProvider = FutureProvider<List<AppVoice>>((ref) async {
+  final ttsService = TTSService();
+  return await ttsService.getAppVoices();
+});
 
 class VoiceSelectorWidget extends ConsumerWidget {
-  final String currentVoiceId;
-  final Function(String) onVoiceChanged;
-
-  const VoiceSelectorWidget({
-    super.key,
-    required this.currentVoiceId,
-    required this.onVoiceChanged,
-  });
+  const VoiceSelectorWidget({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final voices = TTSService.vietnameseVoices;
+    final selectedVoiceId = ref.watch(ttsVoiceIdProvider);
+    final voicesAsync = ref.watch(appVoicesProvider);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(
-          context,
-        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+    return voicesAsync.when(
+      data: (voices) {
+        if (voices.isEmpty) {
+          return ListTile(
+            leading: const Icon(Icons.record_voice_over),
+            title: const Text('Giọng đọc'),
+            subtitle: const Text('Không có giọng đọc khả dụng'),
+            trailing: const Icon(Icons.error_outline, color: Colors.red),
+          );
+        }
+
+        final selectedVoice = voices.firstWhere(
+          (v) => v.id == selectedVoiceId,
+          orElse: () => voices.first,
+        );
+
+        return Column(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.record_voice_over),
+              title: const Text('Giọng đọc'),
+              subtitle: Text(selectedVoice.name),
+              trailing: TextButton(
+                onPressed: () => _showVoiceSelector(context, ref, voices),
+                child: const Text('Thay đổi'),
+              ),
+            ),
+            // Voice info
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    children: [
+                      Text(
+                        selectedVoice.genderIcon,
+                        style: const TextStyle(fontSize: 24),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              selectedVoice.name,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              selectedVoice.description,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (selectedVoice.isDefault)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primaryContainer,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            'Mặc định',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+      loading: () => ListTile(
+        leading: const Icon(Icons.record_voice_over),
+        title: const Text('Giọng đọc'),
+        subtitle: const Text('Đang tải...'),
+        trailing: const SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(strokeWidth: 2),
         ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      error: (error, stack) => ListTile(
+        leading: const Icon(Icons.record_voice_over),
+        title: const Text('Giọng đọc'),
+        subtitle: Text('Lỗi: $error'),
+        trailing: IconButton(
+          icon: const Icon(Icons.refresh),
+          onPressed: () => ref.invalidate(appVoicesProvider),
+        ),
+      ),
+    );
+  }
+
+  void _showVoiceSelector(
+    BuildContext context,
+    WidgetRef ref,
+    List<AppVoice> voices,
+  ) {
+    final selectedVoiceId = ref.read(ttsVoiceIdProvider);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (context, scrollController) => Column(
           children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    Icons.people_rounded,
-                    color: Theme.of(context).colorScheme.primary,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  'Chọn giọng đọc',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-              ],
+            // Handle bar
+            Container(
+              margin: const EdgeInsets.only(top: 12, bottom: 8),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
-            const SizedBox(height: 16),
-            ...voices.entries.map((entry) {
-              final voiceKey = entry.key;
-              final voiceId = entry.value;
-              final isSelected = voiceId == currentVoiceId;
+            // Title
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  const Icon(Icons.record_voice_over),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'Chọn giọng đọc',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            // Voice list
+            Expanded(
+              child: ListView.builder(
+                controller: scrollController,
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                itemCount: voices.length,
+                itemBuilder: (context, index) {
+                  final voice = voices[index];
+                  final isSelected = voice.id == selectedVoiceId;
 
-              String voiceName;
-              String voiceDescription;
-              IconData voiceIcon;
-
-              switch (voiceKey) {
-                case 'vietnamese':
-                  voiceName = 'Vietnamese';
-                  voiceDescription = 'Tiếng Việt';
-                  voiceIcon = Icons.flag_rounded;
-                  break;
-                default:
-                  voiceName = voiceKey;
-                  voiceDescription = 'Giọng đọc';
-                  voiceIcon = Icons.record_voice_over_rounded;
-              }
-
-              return Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () => onVoiceChanged(voiceId),
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isSelected
-                              ? Theme.of(context).colorScheme.primary
-                              : Theme.of(
-                                  context,
-                                ).colorScheme.outline.withValues(alpha: 0.3),
-                          width: isSelected ? 2 : 1,
-                        ),
-                        color: isSelected
-                            ? Theme.of(
-                                context,
-                              ).colorScheme.primary.withValues(alpha: 0.1)
-                            : Theme.of(context).colorScheme.surface,
-                        boxShadow: isSelected
-                            ? [
-                                BoxShadow(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.primary.withValues(alpha: 0.2),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ]
-                            : null,
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? Theme.of(
-                                      context,
-                                    ).colorScheme.primary.withValues(alpha: 0.2)
-                                  : Theme.of(context)
-                                        .colorScheme
-                                        .surfaceContainerHighest
-                                        .withValues(alpha: 0.5),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Icon(
-                              voiceIcon,
-                              color: isSelected
-                                  ? Theme.of(context).colorScheme.primary
-                                  : Theme.of(
-                                      context,
-                                    ).colorScheme.onSurfaceVariant,
-                              size: 20,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  voiceName,
-                                  style: Theme.of(context).textTheme.titleSmall
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        color: isSelected
-                                            ? Theme.of(
-                                                context,
-                                              ).colorScheme.primary
-                                            : Theme.of(
-                                                context,
-                                              ).colorScheme.onSurface,
-                                      ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  voiceDescription,
-                                  style: Theme.of(context).textTheme.bodySmall
-                                      ?.copyWith(
-                                        color: isSelected
-                                            ? Theme.of(context)
-                                                  .colorScheme
-                                                  .primary
-                                                  .withValues(alpha: 0.8)
-                                            : Theme.of(
-                                                context,
-                                              ).colorScheme.onSurfaceVariant,
-                                      ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (isSelected)
-                            Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.primary,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.check_rounded,
-                                color: Theme.of(context).colorScheme.onPrimary,
-                                size: 16,
-                              ),
-                            ),
-                        ],
+                  return ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: isSelected
+                          ? Theme.of(context).colorScheme.primary
+                          : Colors.grey[200],
+                      child: Text(
+                        voice.genderIcon,
+                        style: const TextStyle(fontSize: 20),
                       ),
                     ),
-                  ),
-                ),
-              );
-            }).toList(),
+                    title: Row(
+                      children: [
+                        Text(
+                          voice.name,
+                          style: TextStyle(
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                          ),
+                        ),
+                        if (voice.isDefault) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.primaryContainer,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              'Mặc định',
+                              style: TextStyle(
+                                fontSize: 9,
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    subtitle: Text(
+                      voice.description,
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    trailing: isSelected
+                        ? Icon(
+                            Icons.check_circle,
+                            color: Theme.of(context).colorScheme.primary,
+                          )
+                        : null,
+                    selected: isSelected,
+                    onTap: () async {
+                      // Update voice selection
+                      ref.read(ttsVoiceIdProvider.notifier).state = voice.id;
+                      final settingsService = ref.read(settingsServiceProvider);
+                      await settingsService.setTTSVoiceId(voice.id);
+
+                      // Show feedback
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Đã chọn giọng: ${voice.name}'),
+                            duration: const Duration(seconds: 2),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                        Navigator.pop(context);
+                      }
+                    },
+                  );
+                },
+              ),
+            ),
           ],
         ),
       ),

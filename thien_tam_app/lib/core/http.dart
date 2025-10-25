@@ -3,7 +3,7 @@ import 'env.dart';
 
 final dio = Dio(
   BaseOptions(
-    baseUrl: apiBase,
+    baseUrl: Env.apiBaseUrl,
     connectTimeout: const Duration(seconds: 30),
     receiveTimeout: const Duration(seconds: 60),
   ),
