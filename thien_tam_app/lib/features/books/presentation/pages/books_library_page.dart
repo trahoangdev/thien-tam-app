@@ -116,13 +116,17 @@ class _BooksLibraryPageState extends ConsumerState<BooksLibraryPage> {
                           return Padding(
                             padding: const EdgeInsets.only(right: 8),
                             child: FilterChip(
-                              label: Text(category.label),
-                              selected: selectedCategory == category.value,
+                              avatar: Text(
+                                category.icon,
+                                style: const TextStyle(fontSize: 16),
+                              ),
+                              label: Text(category.name),
+                              selected: selectedCategory == category.id,
                               onSelected: (selected) {
                                 ref
                                     .read(selectedBookCategoryProvider.notifier)
                                     .state = selected
-                                    ? category.value
+                                    ? category.id
                                     : null;
                                 ref
                                         .read(bookCurrentPageProvider.notifier)
