@@ -10,6 +10,8 @@ import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../auth/presentation/providers/permission_providers.dart'
     as permissions;
 import '../../../chat/presentation/pages/zen_master_chat_page.dart';
+import '../../../audio/presentation/pages/audio_library_page.dart';
+import '../../../books/presentation/pages/books_library_page.dart';
 
 /// Shell chính với Bottom Navigation
 class MainShell extends ConsumerStatefulWidget {
@@ -21,6 +23,7 @@ class MainShell extends ConsumerStatefulWidget {
 
 class _MainShellState extends ConsumerState<MainShell> {
   int _currentIndex = 0;
+  bool _isFabMenuOpen = false;
 
   @override
   Widget build(BuildContext context) {
@@ -133,42 +136,140 @@ class _MainShellState extends ConsumerState<MainShell> {
           items: navigationItems,
         ),
       ),
-      floatingActionButton: _currentIndex == 0
-          ? Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Zen Master Chat FAB
-                FloatingActionButton(
-                  heroTag: 'zen_master',
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ZenMasterChatPage(),
-                      ),
-                    );
-                  },
-                  backgroundColor: Theme.of(context).colorScheme.secondary,
-                  child: const Icon(Icons.spa, color: Colors.white),
+      floatingActionButton: _currentIndex == 0 ? _buildSpeedDialMenu() : null,
+    );
+  }
+
+  Widget _buildSpeedDialMenu() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        // Menu items (hiển thị khi mở với animation)
+        if (_isFabMenuOpen) ...[
+          _buildSpeedDialItem(
+            icon: Icons.spa,
+            label: 'Thiền Sư',
+            backgroundColor: Theme.of(context).colorScheme.secondary,
+            onTap: () {
+              setState(() {
+                _isFabMenuOpen = false;
+              });
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ZenMasterChatPage(),
                 ),
-                const SizedBox(height: 12),
-                // Settings FAB
-                FloatingActionButton(
-                  heroTag: 'settings',
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const SettingsPage(),
-                      ),
-                    );
-                  },
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  child: const Icon(Icons.settings, color: Colors.white),
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+          _buildSpeedDialItem(
+            icon: Icons.library_music,
+            label: 'Audio',
+            backgroundColor: Colors.orange,
+            onTap: () {
+              setState(() {
+                _isFabMenuOpen = false;
+              });
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AudioLibraryPage(),
                 ),
-              ],
-            )
-          : null,
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+          _buildSpeedDialItem(
+            icon: Icons.menu_book,
+            label: 'Kinh Sách',
+            backgroundColor: Colors.deepPurple,
+            onTap: () {
+              setState(() {
+                _isFabMenuOpen = false;
+              });
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const BooksLibraryPage(),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+          _buildSpeedDialItem(
+            icon: Icons.settings,
+            label: 'Cài Đặt',
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            onTap: () {
+              setState(() {
+                _isFabMenuOpen = false;
+              });
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsPage()),
+              );
+            },
+          ),
+          const SizedBox(height: 16),
+        ],
+        // Main FAB (luôn hiển thị)
+        FloatingActionButton(
+          heroTag: 'main_menu',
+          onPressed: () {
+            setState(() {
+              _isFabMenuOpen = !_isFabMenuOpen;
+            });
+          },
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          child: AnimatedRotation(
+            turns: _isFabMenuOpen ? 0.125 : 0.0,
+            duration: const Duration(milliseconds: 200),
+            child: Icon(
+              _isFabMenuOpen ? Icons.close : Icons.menu,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSpeedDialItem({
+    required IconData icon,
+    required String label,
+    required Color backgroundColor,
+    required VoidCallback onTap,
+  }) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Label
+        Material(
+          elevation: 4,
+          borderRadius: BorderRadius.circular(8),
+          color: Theme.of(context).colorScheme.surface,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Text(
+              label,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        // FAB
+        FloatingActionButton(
+          heroTag: label,
+          mini: true,
+          onPressed: onTap,
+          backgroundColor: backgroundColor,
+          child: Icon(icon, color: Colors.white, size: 20),
+        ),
+      ],
     );
   }
 }

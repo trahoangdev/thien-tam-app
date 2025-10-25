@@ -180,6 +180,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             ),
           ),
 
+          const SizedBox(height: 16),
+
           // Save Button ngay sau phần chỉnh sửa font
           if (_hasUnsavedChanges) ...[
             const SizedBox(height: 16),

@@ -113,39 +113,19 @@ class User {
 }
 
 enum UserRole {
-  user('USER'),
-  editor('EDITOR'),
-  admin('ADMIN');
+  user('USER');
 
   const UserRole(this.value);
   final String value;
 
   static UserRole fromString(String value) {
-    switch (value) {
-      case 'USER':
-        return UserRole.user;
-      case 'EDITOR':
-        return UserRole.editor;
-      case 'ADMIN':
-        return UserRole.admin;
-      default:
-        return UserRole.user;
-    }
+    return UserRole.user; // Chỉ có 1 role
   }
 
-  String get displayName {
-    switch (this) {
-      case UserRole.user:
-        return 'Người dùng';
-      case UserRole.editor:
-        return 'Biên tập viên';
-      case UserRole.admin:
-        return 'Quản trị viên';
-    }
-  }
+  String get displayName => 'Người dùng';
 
-  bool get isPremium => false; // Không còn premium
-  bool get isVip => false; // Không còn vip
+  bool get isPremium => false;
+  bool get isVip => false;
 }
 
 class UserPreferences {
@@ -250,9 +230,17 @@ class ReadingGoals {
 
   factory ReadingGoals.fromJson(Map<String, dynamic> json) {
     return ReadingGoals(
-      dailyTarget: json['dailyTarget'] ?? 15,
-      weeklyTarget: json['weeklyTarget'] ?? 5,
+      dailyTarget: _parseInt(json['dailyTarget'], defaultValue: 15),
+      weeklyTarget: _parseInt(json['weeklyTarget'], defaultValue: 5),
     );
+  }
+
+  static int _parseInt(dynamic value, {int defaultValue = 0}) {
+    if (value == null) return defaultValue;
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value) ?? defaultValue;
+    if (value is double) return value.toInt();
+    return defaultValue;
   }
 
   Map<String, dynamic> toJson() {
@@ -286,15 +274,28 @@ class UserStats {
 
   factory UserStats.fromJson(Map<String, dynamic> json) {
     return UserStats(
-      totalReadings: json['totalReadings'] ?? 0,
-      totalReadingTime: json['totalReadingTime'] ?? 0,
-      streakDays: json['streakDays'] ?? 0,
-      longestStreak: json['longestStreak'] ?? 0,
-      favoriteTopics: List<String>.from(json['favoriteTopics'] ?? []),
+      totalReadings: _parseInt(json['totalReadings']),
+      totalReadingTime: _parseInt(json['totalReadingTime']),
+      streakDays: _parseInt(json['streakDays']),
+      longestStreak: _parseInt(json['longestStreak']),
+      favoriteTopics:
+          (json['favoriteTopics'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
       readingHistory: (json['readingHistory'] as List<dynamic>? ?? [])
           .map((entry) => ReadingHistoryEntry.fromJson(entry))
           .toList(),
     );
+  }
+
+  // Helper method to safely parse int from dynamic
+  static int _parseInt(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value) ?? 0;
+    if (value is double) return value.toInt();
+    return 0;
   }
 
   Map<String, dynamic> toJson() {
@@ -340,10 +341,20 @@ class ReadingHistoryEntry {
 
   factory ReadingHistoryEntry.fromJson(Map<String, dynamic> json) {
     return ReadingHistoryEntry(
-      readingId: json['readingId'] ?? '',
-      date: DateTime.parse(json['date'] ?? DateTime.now().toIso8601String()),
-      timeSpent: json['timeSpent'] ?? 0,
+      readingId: json['readingId']?.toString() ?? '',
+      date: json['date'] != null
+          ? DateTime.parse(json['date'])
+          : DateTime.now(),
+      timeSpent: _parseInt(json['timeSpent']),
     );
+  }
+
+  static int _parseInt(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value) ?? 0;
+    if (value is double) return value.toInt();
+    return 0;
   }
 
   Map<String, dynamic> toJson() {

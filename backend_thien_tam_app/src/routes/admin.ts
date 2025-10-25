@@ -1,6 +1,8 @@
 import { Router } from "express";
 import Reading from "../models/Reading";
+import User, { UserRole } from "../models/User";
 import { startOfLocalDay } from "../utils/date";
+import bcrypt from "bcrypt";
 
 const r = Router();
 
@@ -534,6 +536,459 @@ r.get("/stats", async (_req, res) => {
     });
   } catch (error) {
     console.error("Admin stats error:", error);
+    res.status(500).json({ message: "Lỗi server" });
+  }
+});
+
+// ============ USER MANAGEMENT ============
+
+/**
+ * @swagger
+ * /admin/users:
+ *   get:
+ *     summary: Get all users (Admin)
+ *     tags: [Admin - Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: role
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: isActive
+ *         schema:
+ *           type: boolean
+ *       - in: query
+ *         name: sortBy
+ *         schema:
+ *           type: string
+ *           default: createdAt
+ *       - in: query
+ *         name: sortOrder
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: desc
+ *     responses:
+ *       200:
+ *         description: List of users
+ */
+r.get("/users", async (req, res) => {
+  try {
+    const { 
+      page = "1", 
+      limit = "20", 
+      search, 
+      role, 
+      isActive,
+      sortBy = "createdAt",
+      sortOrder = "desc"
+    } = req.query as any;
+    
+    const p = Math.max(parseInt(page), 1);
+    const l = Math.min(Math.max(parseInt(limit), 1), 100);
+
+    const filter: any = {};
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } }
+      ];
+    }
+    if (role) filter.role = role;
+    if (isActive !== undefined) filter.isActive = isActive === 'true';
+
+    const sort: any = {};
+    sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
+
+    const users = await User.find(filter)
+      .select('-passwordHash')
+      .sort(sort)
+      .skip((p - 1) * l)
+      .limit(l)
+      .lean();
+    
+    const total = await User.countDocuments(filter);
+
+    res.json({
+      users,
+      total,
+      page: p,
+      totalPages: Math.ceil(total / l),
+    });
+  } catch (error) {
+    console.error("Admin get users error:", error);
+    res.status(500).json({ message: "Lỗi server" });
+  }
+});
+
+/**
+ * @swagger
+ * /admin/users:
+ *   post:
+ *     summary: Create new user (Admin)
+ *     tags: [Admin - Users]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - email
+ *               - password
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *                 minLength: 6
+ *               isActive:
+ *                 type: boolean
+ *                 default: true
+ *     responses:
+ *       201:
+ *         description: User created successfully
+ *       400:
+ *         description: Validation error or email already exists
+ */
+r.post("/users", async (req, res) => {
+  try {
+    const { name, email, password, isActive = true } = req.body;
+
+    // Validate required fields
+    if (!name || !email || !password) {
+      return res.status(400).json({ 
+        message: "Vui lòng cung cấp đầy đủ thông tin: name, email, password" 
+      });
+    }
+
+    // Validate email format
+    const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: "Email không hợp lệ" });
+    }
+
+    // Validate password length
+    if (password.length < 6) {
+      return res.status(400).json({ 
+        message: "Mật khẩu phải có ít nhất 6 ký tự" 
+      });
+    }
+
+    // Check if email already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "Email đã được sử dụng" });
+    }
+
+    // Hash password
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    // Create user
+    const user = new User({
+      name,
+      email,
+      passwordHash,
+      role: UserRole.USER,
+      isActive,
+    });
+
+    await user.save();
+
+    // Return user without password
+    const userResponse: any = user.toObject();
+    delete userResponse.passwordHash;
+
+    res.status(201).json({ 
+      message: "Tạo người dùng thành công", 
+      user: userResponse 
+    });
+  } catch (error) {
+    console.error("Admin create user error:", error);
+    res.status(500).json({ message: "Lỗi server" });
+  }
+});
+
+/**
+ * @swagger
+ * /admin/users/{id}:
+ *   get:
+ *     summary: Get user by ID (Admin)
+ *     tags: [Admin - Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: User details
+ */
+r.get("/users/:id", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select('-passwordHash');
+    if (!user) {
+      return res.status(404).json({ message: "Không tìm thấy người dùng" });
+    }
+    res.json({ user });
+  } catch (error) {
+    res.status(500).json({ message: "Lỗi server" });
+  }
+});
+
+/**
+ * @swagger
+ * /admin/users/{id}:
+ *   put:
+ *     summary: Update user (Admin)
+ *     tags: [Admin - Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *                 minLength: 6
+ *                 description: Optional - only if changing password
+ *               isActive:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: User updated successfully
+ *       400:
+ *         description: Validation error
+ */
+r.put("/users/:id", async (req, res) => {
+  try {
+    const { name, email, password, isActive } = req.body;
+    const updateData: any = {};
+
+    // Validate and add fields to update
+    if (name !== undefined) {
+      if (name.length < 2) {
+        return res.status(400).json({ 
+          message: "Tên phải có ít nhất 2 ký tự" 
+        });
+      }
+      updateData.name = name;
+    }
+
+    if (email !== undefined) {
+      const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ message: "Email không hợp lệ" });
+      }
+      
+      // Check if email is already used by another user
+      const existingUser = await User.findOne({ 
+        email, 
+        _id: { $ne: req.params.id } 
+      });
+      if (existingUser) {
+        return res.status(400).json({ message: "Email đã được sử dụng" });
+      }
+      
+      updateData.email = email;
+    }
+
+    if (password !== undefined && password.length > 0) {
+      if (password.length < 6) {
+        return res.status(400).json({ 
+          message: "Mật khẩu phải có ít nhất 6 ký tự" 
+        });
+      }
+      updateData.passwordHash = await bcrypt.hash(password, 10);
+    }
+
+    if (isActive !== undefined) {
+      updateData.isActive = isActive;
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true }
+    ).select('-passwordHash');
+
+    if (!user) {
+      return res.status(404).json({ message: "Không tìm thấy người dùng" });
+    }
+
+    res.json({ message: "Cập nhật người dùng thành công", user });
+  } catch (error) {
+    console.error("Admin update user error:", error);
+    res.status(500).json({ message: "Lỗi server" });
+  }
+});
+
+/**
+ * @swagger
+ * /admin/users/{id}/role:
+ *   put:
+ *     summary: Update user role (Admin)
+ *     tags: [Admin - Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               role:
+ *                 type: string
+ *                 enum: [USER]
+ *     responses:
+ *       200:
+ *         description: Role updated
+ */
+r.put("/users/:id/role", async (req, res) => {
+  try {
+    const { role } = req.body;
+    if (!role || role !== 'USER') {
+      return res.status(400).json({ message: "Role không hợp lệ" });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { role },
+      { new: true }
+    ).select('-passwordHash');
+
+    if (!user) {
+      return res.status(404).json({ message: "Không tìm thấy người dùng" });
+    }
+
+    res.json({ message: "Cập nhật vai trò thành công", user });
+  } catch (error) {
+    res.status(500).json({ message: "Lỗi server" });
+  }
+});
+
+/**
+ * @swagger
+ * /admin/users/{id}/status:
+ *   put:
+ *     summary: Update user status (Admin)
+ *     tags: [Admin - Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               isActive:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Status updated
+ */
+r.put("/users/:id/status", async (req, res) => {
+  try {
+    const { isActive } = req.body;
+    if (typeof isActive !== 'boolean') {
+      return res.status(400).json({ message: "isActive phải là boolean" });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { isActive },
+      { new: true }
+    ).select('-passwordHash');
+
+    if (!user) {
+      return res.status(404).json({ message: "Không tìm thấy người dùng" });
+    }
+
+    res.json({ message: "Cập nhật trạng thái thành công", user });
+  } catch (error) {
+    res.status(500).json({ message: "Lỗi server" });
+  }
+});
+
+/**
+ * @swagger
+ * /admin/users/{id}:
+ *   delete:
+ *     summary: Delete user (Admin)
+ *     tags: [Admin - Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: User deleted
+ */
+r.delete("/users/:id", async (req, res) => {
+  try {
+    const user = await User.findByIdAndDelete(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: "Không tìm thấy người dùng" });
+    }
+    res.json({ message: "Xóa người dùng thành công" });
+  } catch (error) {
     res.status(500).json({ message: "Lỗi server" });
   }
 });

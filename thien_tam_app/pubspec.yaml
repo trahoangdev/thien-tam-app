@@ -70,11 +70,20 @@ dependencies:
   url_launcher: ^6.3.1
   
   # Audio player for TTS
-  audioplayers: ^6.1.0
+  audioplayers: ^6.5.1
   
   # Path provider for file operations
   path_provider: ^2.1.4
   flutter_markdown: ^0.7.7+1
+  
+  # File picker for admin audio upload
+  file_picker: ^8.1.6
+  
+  # PDF viewer
+  syncfusion_flutter_pdfviewer: ^28.1.36
+  
+  # Device info (required by Syncfusion PDF viewer)
+  device_info_plus: ^11.5.0
 
 dev_dependencies:
   flutter_test:

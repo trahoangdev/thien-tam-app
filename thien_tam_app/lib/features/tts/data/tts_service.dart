@@ -77,6 +77,36 @@ class TTSVoice {
   }
 }
 
+// App voice model (từ backend /tts/voices)
+class AppVoice {
+  final String id;
+  final String name;
+  final String description;
+  final String gender;
+  final bool isDefault;
+
+  AppVoice({
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.gender,
+    required this.isDefault,
+  });
+
+  factory AppVoice.fromJson(Map<String, dynamic> json) {
+    return AppVoice(
+      id: json['id'] ?? '',
+      name: json['name'] ?? '',
+      description: json['description'] ?? '',
+      gender: json['gender'] ?? 'female',
+      isDefault: json['isDefault'] ?? false,
+    );
+  }
+
+  // Helper to get icon based on gender
+  String get genderIcon => gender == 'female' ? '👩' : '👨';
+}
+
 class TTSModel {
   final String modelId;
   final String name;
@@ -159,9 +189,22 @@ class TTSService {
       _isPaused = state == PlayerState.paused;
     });
 
-    _audioPlayer.onPlayerComplete.listen((_) {
+    _audioPlayer.onPlayerComplete.listen((_) async {
       _isPlaying = false;
       _isPaused = false;
+
+      // Clean up audio file when playback completes
+      if (_currentAudioPath != null) {
+        try {
+          final file = File(_currentAudioPath!);
+          if (await file.exists()) {
+            await file.delete();
+          }
+        } catch (e) {
+          print('Failed to delete completed audio file: $e');
+        }
+      }
+
       _currentAudioPath = null;
 
       // Call completion callback if set
@@ -208,6 +251,15 @@ class TTSService {
   // Play audio from file path
   Future<bool> playAudio(String filePath) async {
     try {
+      // IMPORTANT: Stop any currently playing audio first to prevent overlap/bleeding
+      if (_isPlaying || _isPaused) {
+        await _audioPlayer.stop();
+        await Future.delayed(
+          const Duration(milliseconds: 100),
+        ); // Small delay for cleanup
+      }
+
+      // Play new audio
       await _audioPlayer.play(DeviceFileSource(filePath));
       _currentAudioPath = filePath;
       return true;
@@ -241,13 +293,26 @@ class TTSService {
       await _audioPlayer.stop();
       _isPlaying = false;
       _isPaused = false;
+
+      // Clean up old audio file if exists
+      if (_currentAudioPath != null) {
+        try {
+          final file = File(_currentAudioPath!);
+          if (await file.exists()) {
+            await file.delete();
+          }
+        } catch (e) {
+          print('Failed to delete temp audio file: $e');
+        }
+      }
+
       _currentAudioPath = null;
     } catch (e) {
       print('Stop audio error: $e');
     }
   }
 
-  // Get available voices
+  // Get available voices (old ElevenLabs API format)
   Future<List<TTSVoice>> getVoices() async {
     try {
       final response = await _dio.get('/tts/voices');
@@ -262,6 +327,25 @@ class TTSService {
       return [];
     } catch (e) {
       print('Get voices error: $e');
+      return [];
+    }
+  }
+
+  // Get available app voices (simplified, from /tts/voices)
+  Future<List<AppVoice>> getAppVoices() async {
+    try {
+      final response = await _dio.get('/tts/voices');
+
+      if (response.statusCode == 200) {
+        final voices = (response.data['voices'] as List)
+            .map((voice) => AppVoice.fromJson(voice))
+            .toList();
+        return voices;
+      }
+
+      return [];
+    } catch (e) {
+      print('Get app voices error: $e');
       return [];
     }
   }

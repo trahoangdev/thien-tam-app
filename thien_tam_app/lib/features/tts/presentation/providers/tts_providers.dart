@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/tts_service.dart';
+import '../../../../core/settings_providers.dart';
 
 // TTS Service provider
 final ttsServiceProvider = Provider<TTSService>((ref) {
@@ -27,7 +28,7 @@ final ttsModelsProvider = FutureProvider<List<TTSModel>>((ref) async {
 // Audio player state provider
 final audioPlayerStateProvider =
     StateNotifierProvider<AudioPlayerStateNotifier, AudioPlayerState>((ref) {
-      return AudioPlayerStateNotifier(ref.watch(ttsServiceProvider));
+      return AudioPlayerStateNotifier(ref.watch(ttsServiceProvider), ref);
     });
 
 class AudioPlayerState {
@@ -64,8 +65,10 @@ class AudioPlayerState {
 
 class AudioPlayerStateNotifier extends StateNotifier<AudioPlayerState> {
   final TTSService _ttsService;
+  final Ref _ref;
 
-  AudioPlayerStateNotifier(this._ttsService) : super(const AudioPlayerState()) {
+  AudioPlayerStateNotifier(this._ttsService, this._ref)
+    : super(const AudioPlayerState()) {
     _initializeAudioPlayer();
   }
 
@@ -86,14 +89,20 @@ class AudioPlayerStateNotifier extends StateNotifier<AudioPlayerState> {
   // Convert text to speech and play
   Future<void> speakText(String text, {String? voiceId}) async {
     try {
+      // Stop any currently playing audio first to prevent overlap
+      if (state.isPlaying || state.isPaused) {
+        await _ttsService.stopAudio();
+      }
+
       state = state.copyWith(isLoading: true, error: null);
+
+      // Get selected voice from settings
+      final selectedVoiceId = _ref.read(ttsVoiceIdProvider);
 
       // Use Vietnamese voice settings optimized for Buddhist content
       final request = TTSRequest(
         text: text,
-        voiceId:
-            voiceId ??
-            TTSService.vietnameseVoices[TTSService.defaultVietnameseVoice],
+        voiceId: voiceId ?? selectedVoiceId, // Use selected voice from settings
         voiceSettings: TTSService.defaultVietnameseSettings,
       );
 
