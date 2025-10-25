@@ -46,9 +46,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           }
         }
 
-        Navigator.of(
-          context,
-        ).pop(true); // Return true to indicate successful login
+        // Check if we can pop (có route để quay lại)
+        if (Navigator.of(context).canPop()) {
+          Navigator.of(
+            context,
+          ).pop(true); // Return true to indicate successful login
+        } else {
+          // Nếu không có route để pop, navigate to main shell
+          Navigator.of(context).pushReplacementNamed('/main');
+        }
       } else if (next == AuthState.error) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -61,6 +67,22 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            // Check if we can pop
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            } else {
+              // Fallback to main shell
+              Navigator.of(context).pushReplacementNamed('/main');
+            }
+          },
+        ),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),

@@ -71,7 +71,15 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () {
+            // Check if we can pop
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            } else {
+              // Fallback to main shell
+              Navigator.of(context).pushReplacementNamed('/main');
+            }
+          },
         ),
       ),
       body: SafeArea(

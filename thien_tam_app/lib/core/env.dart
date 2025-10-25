@@ -1,6 +1,9 @@
 // Environment configuration
 const apiBase = String.fromEnvironment(
   'API_BASE',
-  //'http://10.0.0.100:4000'
-  defaultValue: 'http://192.168.1.228:4000',
+  // For Android Emulator (ĐANG SỬ DỤNG)
+  defaultValue: 'http://10.0.2.2:4000',
+
+  // For Physical Device:
+  // defaultValue: 'http://10.150.0.53:4000', // IP: 10.150.0.53 (cập nhật 25/10/2025)
 );

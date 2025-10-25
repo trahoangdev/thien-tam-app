@@ -129,7 +129,9 @@ r.post('/text-to-speech', async (req, res) => {
     res.set({
       'Content-Type': 'audio/mpeg',
       'Content-Length': result.audioData!.length.toString(),
+      'Content-Disposition': 'inline; filename="speech.mp3"',
       'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
+      'Accept-Ranges': 'bytes',
     });
 
     // Send audio data

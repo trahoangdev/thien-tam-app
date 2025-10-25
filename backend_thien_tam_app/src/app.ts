@@ -10,6 +10,7 @@ import userAuthRouter from "./routes/userAuth";
 import adminRouter from "./routes/admin";
 import topicsRouter from "./routes/topics";
 import ttsRouter from "./routes/tts";
+import chatRouter from "./routes/chat";
 import { requireAuth, requireRoles } from "./middlewares/auth";
 import { errorHandler } from "./middlewares/error";
 import { setupSwagger } from "./config/swagger";
@@ -42,6 +43,7 @@ setupSwagger(app);
 // Public routes
 app.use("/readings", readingsRouter);
 app.use("/tts", ttsRouter); // Text-to-speech routes
+app.use("/chat", chatRouter); // Gemini chat routes
 app.get("/healthz", (_req, res) => res.json({ ok: true }));
 
 // Auth routes (with stricter rate limit)

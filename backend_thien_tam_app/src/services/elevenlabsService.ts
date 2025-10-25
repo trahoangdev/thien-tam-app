@@ -37,7 +37,7 @@ class ElevenLabsService {
 
     try {
       const voiceId = request.voiceId || 'DXiwi9uoxet6zAiZXynP'; // Default Vietnamese voice
-      const modelId = request.modelId || 'eleven_multilingual_v2'; // Support Vietnamese
+      const modelId = request.modelId || 'eleven_flash_v2_5'; // Fastest model with Vietnamese support
       
       const voiceSettings = {
         stability: request.voiceSettings?.stability || 0.5,

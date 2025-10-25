@@ -220,6 +220,6 @@ For support, email support@thientam.app or create an issue on GitHub.
 ## 🔗 Links
 
 - **Live Demo**: [Coming Soon]
-- **Documentation**: [Wiki](https://github.com/yourusername/thien-tam-app/wiki)
-- **Issues**: [GitHub Issues](https://github.com/yourusername/thien-tam-app/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/thien-tam-app/discussions)
+- **Documentation**: [Wiki](https://github.com/trahoangdev/thien-tam-app/wiki)
+- **Issues**: [GitHub Issues](https://github.com/trahoangdev/thien-tam-app/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/trahoangdev/thien-tam-app/discussions)

@@ -63,13 +63,31 @@ class _DetailPageState extends ConsumerState<DetailPage> {
     final lineHeight = ref.watch(lineHeightProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        // Always show normalized local date on the AppBar title
-        title: Text(
-          'Bài đọc ${DateFormat('dd/MM/yyyy').format(DateTime(widget.date.year, widget.date.month, widget.date.day))}',
+      appBar: state.when(
+        data: (readings) => AppBar(
+          // Use reading date for accurate display
+          title: Text(
+            readings.isNotEmpty
+                ? 'Bài đọc ${DateFormat('dd/MM/yyyy').format(readings.first.date)}'
+                : 'Bài đọc ${DateFormat('dd/MM/yyyy').format(widget.date)}',
+          ),
+          centerTitle: true,
+          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         ),
-        centerTitle: true,
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        loading: () => AppBar(
+          title: Text(
+            'Bài đọc ${DateFormat('dd/MM/yyyy').format(widget.date)}',
+          ),
+          centerTitle: true,
+          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        ),
+        error: (_, __) => AppBar(
+          title: Text(
+            'Bài đọc ${DateFormat('dd/MM/yyyy').format(widget.date)}',
+          ),
+          centerTitle: true,
+          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        ),
       ),
       body: state.when(
         data: (readings) {
