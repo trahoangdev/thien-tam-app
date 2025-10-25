@@ -34,8 +34,9 @@
 | 4 | **AdminUser (Quản trị viên)** | CRUD tài khoản admin với roles | `AdminUser.ts` | `/admin`, `/auth` | Admin Login |
 | 5 | **Audio (Thư viện âm thanh)** | CRUD audio Phật giáo với Cloudinary | `Audio.ts` | `/audio` | Admin Panel + Audio Library |
 | 6 | **Book (Kinh sách PDF)** | CRUD kinh sách Phật giáo với PDF viewer | `Book.ts` | `/books` | Admin Panel + Books Library |
+| 7 | **BookCategory (Danh mục sách)** | CRUD danh mục cho thư viện kinh sách | `BookCategory.ts` | `/book-categories` | Admin Panel + Books Library |
 
-**Tổng: 6 bảng CRUD**
+**Tổng: 7 bảng CRUD**
 
 ---
 
@@ -74,8 +75,10 @@
 | 29 | **Book Management (Admin)** | CRUD kinh sách PDF từ Admin Panel | Multer + Cloudinary + Flutter |
 | 30 | **PDF Upload from URL** | Upload PDF bằng URL Cloudinary (tránh lag) | Custom API Endpoint |
 | 31 | **Book Categories & Search** | Phân loại và tìm kiếm kinh sách | Full-text Search + Filters |
+| 32 | **Book Category Management** | CRUD danh mục sách với icon, color, order | Custom Admin UI |
+| 33 | **Dynamic Category Filtering** | Lọc kinh sách theo danh mục động | Riverpod State Management |
 
-**Tổng: 31 chức năng nâng cao**
+**Tổng: 33 chức năng nâng cao**
 
 ---
 
@@ -84,9 +87,9 @@
 | Loại chức năng | Số lượng |
 |----------------|----------|
 | Chức năng cơ bản | 15 |
-| CRUD | 6 |
-| Chức năng nâng cao | 31 |
-| **TỔNG CỘNG** | **52 chức năng** |
+| CRUD | 7 |
+| Chức năng nâng cao | 33 |
+| **TỔNG CỘNG** | **55 chức năng** |
 
 ---
 
