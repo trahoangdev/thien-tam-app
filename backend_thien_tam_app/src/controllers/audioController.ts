@@ -1,17 +1,25 @@
-import { Request, Response } from 'express';
-import { z } from 'zod';
-import Audio from '../models/Audio';
-import cloudinaryService from '../services/cloudinaryService';
-import fs from 'fs';
-import path from 'path';
-import os from 'os';
+import { Request, Response } from "express";
+import { z } from "zod";
+import Audio from "../models/Audio";
+import cloudinaryService from "../services/cloudinaryService";
+import fs from "fs";
+import path from "path";
+import os from "os";
 
 // Validation schemas
 const createAudioSchema = z.object({
   title: z.string().min(1).max(200),
   description: z.string().max(1000).optional(),
   artist: z.string().max(100).optional(),
-  category: z.enum(['sutra', 'mantra', 'dharma-talk', 'meditation', 'chanting', 'music', 'other']),
+  category: z.enum([
+    "sutra",
+    "mantra",
+    "dharma-talk",
+    "meditation",
+    "chanting",
+    "music",
+    "other",
+  ]),
   tags: z.array(z.string()).max(10).optional(),
   isPublic: z.boolean().optional(),
 });
@@ -21,7 +29,15 @@ const createAudioFromUrlSchema = z.object({
   title: z.string().min(1).max(200),
   description: z.string().max(1000).optional(),
   artist: z.string().max(100).optional(),
-  category: z.enum(['sutra', 'mantra', 'dharma-talk', 'meditation', 'chanting', 'music', 'other']),
+  category: z.enum([
+    "sutra",
+    "mantra",
+    "dharma-talk",
+    "meditation",
+    "chanting",
+    "music",
+    "other",
+  ]),
   tags: z.array(z.string()).max(10).optional(),
   duration: z.number().optional(),
   fileSize: z.number().optional(),
@@ -33,7 +49,17 @@ const updateAudioSchema = z.object({
   title: z.string().min(1).max(200).optional(),
   description: z.string().max(1000).optional(),
   artist: z.string().max(100).optional(),
-  category: z.enum(['sutra', 'mantra', 'dharma-talk', 'meditation', 'chanting', 'music', 'other']).optional(),
+  category: z
+    .enum([
+      "sutra",
+      "mantra",
+      "dharma-talk",
+      "meditation",
+      "chanting",
+      "music",
+      "other",
+    ])
+    .optional(),
   tags: z.array(z.string()).max(10).optional(),
   isPublic: z.boolean().optional(),
 });
@@ -41,26 +67,33 @@ const updateAudioSchema = z.object({
 /**
  * Upload audio file
  */
-export const uploadAudio = async (req: Request, res: Response) => {
+export const uploadAudio = async (
+  req: Request & { file?: Express.Multer.File },
+  res: Response
+) => {
   try {
     // Check if file is uploaded
     if (!req.file) {
-      return res.status(400).json({ message: 'No audio file uploaded' });
+      return res.status(400).json({ message: "No audio file uploaded" });
     }
 
     // Parse form data (multipart/form-data sends everything as strings)
     const bodyData = {
       ...req.body,
       // Parse tags: can be string, array, or undefined
-      tags: req.body.tags 
-        ? (Array.isArray(req.body.tags) 
-            ? req.body.tags 
-            : req.body.tags.split(',').map((t: string) => t.trim()).filter((t: string) => t))
+      tags: req.body.tags
+        ? Array.isArray(req.body.tags)
+          ? req.body.tags
+          : req.body.tags
+              .split(",")
+              .map((t: string) => t.trim())
+              .filter((t: string) => t)
         : undefined,
       // Parse isPublic: convert string to boolean
-      isPublic: req.body.isPublic !== undefined 
-        ? (req.body.isPublic === 'true' || req.body.isPublic === true)
-        : undefined,
+      isPublic:
+        req.body.isPublic !== undefined
+          ? req.body.isPublic === "true" || req.body.isPublic === true
+          : undefined,
     };
 
     // Validate request body
@@ -69,17 +102,20 @@ export const uploadAudio = async (req: Request, res: Response) => {
     // Get admin ID from auth middleware
     const adminId = req.userId;
     if (!adminId) {
-      return res.status(401).json({ message: 'Unauthorized' });
+      return res.status(401).json({ message: "Unauthorized" });
     }
 
     // Save buffer to temporary file (Cloudinary needs file path)
-    const tempFilePath = path.join(os.tmpdir(), `${Date.now()}-${req.file.originalname}`);
+    const tempFilePath = path.join(
+      os.tmpdir(),
+      `${Date.now()}-${req.file.originalname}`
+    );
     fs.writeFileSync(tempFilePath, req.file.buffer);
 
     try {
       // Upload to Cloudinary
       const uploadResult = await cloudinaryService.uploadAudio(tempFilePath, {
-        folder: 'thientam/audio',
+        folder: "thientam/audio",
         tags: validatedData.tags || [],
       });
 
@@ -106,7 +142,7 @@ export const uploadAudio = async (req: Request, res: Response) => {
       fs.unlinkSync(tempFilePath);
 
       res.status(201).json({
-        message: 'Audio uploaded successfully',
+        message: "Audio uploaded successfully",
         audio,
       });
     } catch (error) {
@@ -117,17 +153,17 @@ export const uploadAudio = async (req: Request, res: Response) => {
       throw error;
     }
   } catch (error: any) {
-    console.error('[AUDIO] Upload error:', error);
-    
+    console.error("[AUDIO] Upload error:", error);
+
     if (error instanceof z.ZodError) {
       return res.status(400).json({
-        message: 'Validation error',
+        message: "Validation error",
         errors: error.errors,
       });
     }
 
     res.status(500).json({
-      message: 'Failed to upload audio',
+      message: "Failed to upload audio",
       error: error.message,
     });
   }
@@ -143,13 +179,14 @@ export const createAudioFromUrl = async (req: Request, res: Response) => {
 
     // Extract public ID from Cloudinary URL
     // URL format: https://res.cloudinary.com/{cloud_name}/video/upload/v{version}/{public_id}.{format}
-    const urlParts = validatedData.cloudinaryUrl.split('/');
+    const urlParts = validatedData.cloudinaryUrl.split("/");
     const fileNameWithExt = urlParts[urlParts.length - 1];
-    const fileName = fileNameWithExt.split('.')[0];
-    const versionIndex = urlParts.findIndex(part => part.startsWith('v'));
-    const publicId = versionIndex !== -1 
-      ? urlParts.slice(versionIndex + 1, -1).join('/') + '/' + fileName
-      : fileName;
+    const fileName = fileNameWithExt.split(".")[0];
+    const versionIndex = urlParts.findIndex((part) => part.startsWith("v"));
+    const publicId =
+      versionIndex !== -1
+        ? urlParts.slice(versionIndex + 1, -1).join("/") + "/" + fileName
+        : fileName;
 
     // Create audio record
     const audio = new Audio({
@@ -160,9 +197,12 @@ export const createAudioFromUrl = async (req: Request, res: Response) => {
       tags: validatedData.tags || [],
       cloudinaryPublicId: publicId,
       cloudinaryUrl: validatedData.cloudinaryUrl,
-      cloudinarySecureUrl: validatedData.cloudinaryUrl.replace('http://', 'https://'),
+      cloudinarySecureUrl: validatedData.cloudinaryUrl.replace(
+        "http://",
+        "https://"
+      ),
       fileSize: validatedData.fileSize || 0,
-      format: validatedData.format || 'mp3',
+      format: validatedData.format || "mp3",
       duration: validatedData.duration || 0,
       uploadedBy: req.userId,
       isPublic: validatedData.isPublic ?? true,
@@ -171,21 +211,21 @@ export const createAudioFromUrl = async (req: Request, res: Response) => {
     await audio.save();
 
     res.status(201).json({
-      message: 'Audio created successfully from URL',
+      message: "Audio created successfully from URL",
       audio,
     });
   } catch (error: any) {
-    console.error('[AUDIO] Create from URL error:', error);
-    
+    console.error("[AUDIO] Create from URL error:", error);
+
     if (error instanceof z.ZodError) {
       return res.status(400).json({
-        message: 'Validation error',
+        message: "Validation error",
         errors: error.errors,
       });
     }
 
     res.status(500).json({
-      message: 'Failed to create audio from URL',
+      message: "Failed to create audio from URL",
       error: error.message,
     });
   }
@@ -203,8 +243,8 @@ export const getAllAudios = async (req: Request, res: Response) => {
       isPublic,
       page = 1,
       limit = 20,
-      sortBy = 'createdAt',
-      sortOrder = 'desc',
+      sortBy = "createdAt",
+      sortOrder = "desc",
     } = req.query;
 
     // Build filter
@@ -215,12 +255,12 @@ export const getAllAudios = async (req: Request, res: Response) => {
     }
 
     if (tags) {
-      const tagArray = typeof tags === 'string' ? tags.split(',') : tags;
+      const tagArray = typeof tags === "string" ? tags.split(",") : tags;
       filter.tags = { $in: tagArray };
     }
 
     if (isPublic !== undefined) {
-      filter.isPublic = isPublic === 'true';
+      filter.isPublic = isPublic === "true";
     }
 
     if (search) {
@@ -232,16 +272,16 @@ export const getAllAudios = async (req: Request, res: Response) => {
 
     // Build sort
     const sort: any = {};
-    sort[sortBy as string] = sortOrder === 'asc' ? 1 : -1;
+    sort[sortBy as string] = sortOrder === "asc" ? 1 : -1;
 
     // Execute query
     const audios = await Audio.find(filter)
       .sort(sort)
       .skip(skip)
       .limit(Number(limit))
-      .populate('uploadedBy', 'email name')
+      .populate("uploadedBy", "email name")
       .exec();
-    
+
     const total = await Audio.countDocuments(filter);
 
     res.json({
@@ -254,9 +294,9 @@ export const getAllAudios = async (req: Request, res: Response) => {
       },
     });
   } catch (error: any) {
-    console.error('[AUDIO] Get all error:', error);
+    console.error("[AUDIO] Get all error:", error);
     res.status(500).json({
-      message: 'Failed to fetch audios',
+      message: "Failed to fetch audios",
       error: error.message,
     });
   }
@@ -269,17 +309,17 @@ export const getAudioById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    const audio = await Audio.findById(id).populate('uploadedBy', 'email name');
+    const audio = await Audio.findById(id).populate("uploadedBy", "email name");
 
     if (!audio) {
-      return res.status(404).json({ message: 'Audio not found' });
+      return res.status(404).json({ message: "Audio not found" });
     }
 
     res.json({ audio });
   } catch (error: any) {
-    console.error('[AUDIO] Get by ID error:', error);
+    console.error("[AUDIO] Get by ID error:", error);
     res.status(500).json({
-      message: 'Failed to fetch audio',
+      message: "Failed to fetch audio",
       error: error.message,
     });
   }
@@ -302,25 +342,25 @@ export const updateAudio = async (req: Request, res: Response) => {
     );
 
     if (!audio) {
-      return res.status(404).json({ message: 'Audio not found' });
+      return res.status(404).json({ message: "Audio not found" });
     }
 
     res.json({
-      message: 'Audio updated successfully',
+      message: "Audio updated successfully",
       audio,
     });
   } catch (error: any) {
-    console.error('[AUDIO] Update error:', error);
+    console.error("[AUDIO] Update error:", error);
 
     if (error instanceof z.ZodError) {
       return res.status(400).json({
-        message: 'Validation error',
+        message: "Validation error",
         errors: error.errors,
       });
     }
 
     res.status(500).json({
-      message: 'Failed to update audio',
+      message: "Failed to update audio",
       error: error.message,
     });
   }
@@ -336,7 +376,7 @@ export const deleteAudio = async (req: Request, res: Response) => {
     const audio = await Audio.findById(id);
 
     if (!audio) {
-      return res.status(404).json({ message: 'Audio not found' });
+      return res.status(404).json({ message: "Audio not found" });
     }
 
     // Delete from Cloudinary
@@ -345,11 +385,11 @@ export const deleteAudio = async (req: Request, res: Response) => {
     // Delete from database
     await audio.deleteOne();
 
-    res.json({ message: 'Audio deleted successfully' });
+    res.json({ message: "Audio deleted successfully" });
   } catch (error: any) {
-    console.error('[AUDIO] Delete error:', error);
+    console.error("[AUDIO] Delete error:", error);
     res.status(500).json({
-      message: 'Failed to delete audio',
+      message: "Failed to delete audio",
       error: error.message,
     });
   }
@@ -365,19 +405,19 @@ export const incrementPlayCount = async (req: Request, res: Response) => {
     const audio = await Audio.findById(id);
 
     if (!audio) {
-      return res.status(404).json({ message: 'Audio not found' });
+      return res.status(404).json({ message: "Audio not found" });
     }
 
     await (audio as any).incrementPlayCount();
 
     res.json({
-      message: 'Play count incremented',
+      message: "Play count incremented",
       playCount: audio.playCount,
     });
   } catch (error: any) {
-    console.error('[AUDIO] Increment play count error:', error);
+    console.error("[AUDIO] Increment play count error:", error);
     res.status(500).json({
-      message: 'Failed to increment play count',
+      message: "Failed to increment play count",
       error: error.message,
     });
   }
@@ -389,20 +429,40 @@ export const incrementPlayCount = async (req: Request, res: Response) => {
 export const getCategories = async (req: Request, res: Response) => {
   try {
     const categories = [
-      { value: 'sutra', label: 'Kinh Phật', description: 'Buddhist sutras and scriptures' },
-      { value: 'mantra', label: 'Chú Phật', description: 'Buddhist mantras and dharani' },
-      { value: 'dharma-talk', label: 'Pháp Thoại', description: 'Dharma talks and teachings' },
-      { value: 'meditation', label: 'Thiền Định', description: 'Meditation guidance' },
-      { value: 'chanting', label: 'Tụng Niệm', description: 'Buddhist chanting' },
-      { value: 'music', label: 'Nhạc Phật', description: 'Buddhist music' },
-      { value: 'other', label: 'Khác', description: 'Other audio content' },
+      {
+        value: "sutra",
+        label: "Kinh Phật",
+        description: "Buddhist sutras and scriptures",
+      },
+      {
+        value: "mantra",
+        label: "Chú Phật",
+        description: "Buddhist mantras and dharani",
+      },
+      {
+        value: "dharma-talk",
+        label: "Pháp Thoại",
+        description: "Dharma talks and teachings",
+      },
+      {
+        value: "meditation",
+        label: "Thiền Định",
+        description: "Meditation guidance",
+      },
+      {
+        value: "chanting",
+        label: "Tụng Niệm",
+        description: "Buddhist chanting",
+      },
+      { value: "music", label: "Nhạc Phật", description: "Buddhist music" },
+      { value: "other", label: "Khác", description: "Other audio content" },
     ];
 
     res.json({ categories });
   } catch (error: any) {
-    console.error('[AUDIO] Get categories error:', error);
+    console.error("[AUDIO] Get categories error:", error);
     res.status(500).json({
-      message: 'Failed to fetch categories',
+      message: "Failed to fetch categories",
       error: error.message,
     });
   }
@@ -418,15 +478,14 @@ export const getPopularAudios = async (req: Request, res: Response) => {
     const audios = await Audio.find({ isPublic: true })
       .sort({ playCount: -1 })
       .limit(Number(limit))
-      .populate('uploadedBy', 'email name');
+      .populate("uploadedBy", "email name");
 
     res.json({ audios });
   } catch (error: any) {
-    console.error('[AUDIO] Get popular error:', error);
+    console.error("[AUDIO] Get popular error:", error);
     res.status(500).json({
-      message: 'Failed to fetch popular audios',
+      message: "Failed to fetch popular audios",
       error: error.message,
     });
   }
 };
-

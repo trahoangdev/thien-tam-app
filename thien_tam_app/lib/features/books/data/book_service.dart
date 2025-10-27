@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import '../../../core/env.dart';
+import '../../../core/config.dart';
 import 'models/book.dart';
 
 class BookService {
@@ -10,7 +10,7 @@ class BookService {
           dio ??
           Dio(
             BaseOptions(
-              baseUrl: Env.apiBaseUrl,
+              baseUrl: AppConfig.apiBaseUrl,
               connectTimeout: const Duration(seconds: 30),
               receiveTimeout: const Duration(seconds: 30),
             ),

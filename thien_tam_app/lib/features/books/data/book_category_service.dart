@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import '../../../core/env.dart';
+import '../../../core/config.dart';
 import 'models/book_category.dart';
 
 class BookCategoryService {
@@ -8,7 +8,7 @@ class BookCategoryService {
   BookCategoryService()
     : _dio = Dio(
         BaseOptions(
-          baseUrl: Env.apiBaseUrl,
+          baseUrl: AppConfig.apiBaseUrl,
           connectTimeout: const Duration(seconds: 30),
           receiveTimeout: const Duration(seconds: 30),
         ),
