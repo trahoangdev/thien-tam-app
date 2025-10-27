@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/book_providers.dart';
 import '../../data/models/book.dart';
+import '../../data/models/book_category.dart' as cat;
 import 'book_detail_page.dart';
 
 class BooksLibraryPage extends ConsumerStatefulWidget {
@@ -363,10 +364,9 @@ class _BookCard extends ConsumerWidget {
                     // Category
                     Row(
                       children: [
-                        Icon(
-                          _getCategoryIcon(book.category),
-                          size: 12,
-                          color: Theme.of(context).colorScheme.primary,
+                        Text(
+                          _getCategoryIcon(book),
+                          style: const TextStyle(fontSize: 12),
                         ),
                         const SizedBox(width: 4),
                         Expanded(
@@ -455,24 +455,31 @@ class _BookCard extends ConsumerWidget {
     );
   }
 
-  IconData _getCategoryIcon(String category) {
-    switch (category) {
+  String _getCategoryIcon(Book book) {
+    // If category is a BookCategory object, use its icon emoji
+    if (book.category is cat.BookCategory) {
+      return (book.category as cat.BookCategory).icon;
+    }
+
+    // Fallback for old string-based categories
+    final categoryStr = book.categoryId;
+    switch (categoryStr) {
       case 'sutra':
-        return Icons.auto_stories;
+        return '📖';
       case 'commentary':
-        return Icons.comment;
+        return '💬';
       case 'biography':
-        return Icons.person;
+        return '👤';
       case 'practice':
-        return Icons.self_improvement;
+        return '🧘';
       case 'dharma-talk':
-        return Icons.record_voice_over;
+        return '🎙️';
       case 'history':
-        return Icons.history_edu;
+        return '📜';
       case 'philosophy':
-        return Icons.psychology;
+        return '🧠';
       default:
-        return Icons.book;
+        return '📚';
     }
   }
 }
