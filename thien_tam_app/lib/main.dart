@@ -6,6 +6,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'features/readings/presentation/pages/main_shell.dart';
 import 'features/notifications/data/notification_service.dart';
 import 'core/settings_providers.dart';
+import 'core/config.dart';
 import 'features/admin/presentation/pages/admin_login_page.dart';
 import 'features/admin/presentation/pages/admin_home_page.dart';
 import 'features/admin/presentation/pages/admin_readings_list_page.dart';
@@ -28,6 +29,9 @@ void main() async {
 
   // Initialize notifications
   await NotificationService().initialize();
+
+  // Print API configuration for debugging
+  AppConfig.printConfig();
 
   runApp(
     ProviderScope(
