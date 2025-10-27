@@ -75,6 +75,7 @@ class BookApiClient {
     required String id,
     String? title,
     String? author,
+    String? translator,
     String? description,
     String? category,
     String? bookLanguage,
@@ -88,6 +89,7 @@ class BookApiClient {
 
       if (title != null) data['title'] = title;
       if (author != null) data['author'] = author;
+      if (translator != null) data['translator'] = translator;
       if (description != null) data['description'] = description;
       if (category != null) data['category'] = category;
       if (bookLanguage != null) data['bookLanguage'] = bookLanguage;
@@ -114,6 +116,7 @@ class BookApiClient {
     required String title,
     required String category,
     String? author,
+    String? translator,
     String? description,
     String? bookLanguage,
     List<String>? tags,
@@ -154,6 +157,7 @@ class BookApiClient {
         MapEntry('title', title),
         MapEntry('category', category),
         if (author != null) MapEntry('author', author),
+        if (translator != null) MapEntry('translator', translator),
         if (description != null) MapEntry('description', description),
         MapEntry('bookLanguage', bookLanguage ?? 'vi'),
         if (tags != null) MapEntry('tags', tags.join(',')),
@@ -188,6 +192,7 @@ class BookApiClient {
     required String title,
     required String category,
     String? author,
+    String? translator,
     String? description,
     String? bookLanguage,
     List<String>? tags,
@@ -198,7 +203,8 @@ class BookApiClient {
   }) async {
     try {
       final data = <String, dynamic>{
-        'cloudinaryUrl': cloudinaryUrl,
+        'pdfUrl':
+            cloudinaryUrl, // Backend expects 'pdfUrl', not 'cloudinaryUrl'
         'title': title,
         'category': category,
         'isPublic': isPublic,
@@ -207,6 +213,7 @@ class BookApiClient {
 
       if (coverImageUrl != null) data['coverImageUrl'] = coverImageUrl;
       if (author != null) data['author'] = author;
+      if (translator != null) data['translator'] = translator;
       if (description != null) data['description'] = description;
       if (tags != null) data['tags'] = tags;
       if (pageCount != null) data['pageCount'] = pageCount;

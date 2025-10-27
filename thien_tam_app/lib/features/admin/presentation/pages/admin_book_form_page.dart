@@ -19,6 +19,7 @@ class _AdminBookFormPageState extends ConsumerState<AdminBookFormPage> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _authorController = TextEditingController();
+  final _translatorController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _tagsController = TextEditingController();
   final _pageCountController = TextEditingController();
@@ -41,6 +42,7 @@ class _AdminBookFormPageState extends ConsumerState<AdminBookFormPage> {
     if (widget.book != null) {
       _titleController.text = widget.book!.title;
       _authorController.text = widget.book!.author ?? '';
+      _translatorController.text = widget.book!.translator ?? '';
       _descriptionController.text = widget.book!.description ?? '';
       _tagsController.text = widget.book!.tags.join(', ');
       _pageCountController.text = widget.book!.pageCount?.toString() ?? '';
@@ -144,6 +146,9 @@ class _AdminBookFormPageState extends ConsumerState<AdminBookFormPage> {
             author: _authorController.text.isEmpty
                 ? null
                 : _authorController.text,
+            translator: _translatorController.text.isEmpty
+                ? null
+                : _translatorController.text,
             description: _descriptionController.text.isEmpty
                 ? null
                 : _descriptionController.text,
@@ -162,6 +167,9 @@ class _AdminBookFormPageState extends ConsumerState<AdminBookFormPage> {
             author: _authorController.text.isEmpty
                 ? null
                 : _authorController.text,
+            translator: _translatorController.text.isEmpty
+                ? null
+                : _translatorController.text,
             description: _descriptionController.text.isEmpty
                 ? null
                 : _descriptionController.text,
@@ -188,6 +196,9 @@ class _AdminBookFormPageState extends ConsumerState<AdminBookFormPage> {
           author: _authorController.text.isEmpty
               ? null
               : _authorController.text,
+          translator: _translatorController.text.isEmpty
+              ? null
+              : _translatorController.text,
           description: _descriptionController.text.isEmpty
               ? null
               : _descriptionController.text,
@@ -408,6 +419,18 @@ class _AdminBookFormPageState extends ConsumerState<AdminBookFormPage> {
                 labelText: 'Tác giả',
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.person),
+              ),
+              enabled: !_isLoading,
+            ),
+            const SizedBox(height: 16),
+
+            // Translator
+            TextFormField(
+              controller: _translatorController,
+              decoration: const InputDecoration(
+                labelText: 'Người dịch',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.translate),
               ),
               enabled: !_isLoading,
             ),
