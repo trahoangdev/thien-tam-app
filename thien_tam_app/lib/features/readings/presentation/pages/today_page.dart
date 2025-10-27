@@ -408,8 +408,9 @@ class TodayPageContent extends ConsumerWidget {
                       onTap: canBookmark
                           ? () async {
                               try {
-                                final result = await bookmarkService
-                                    .toggleBookmark(reading.id);
+                                await bookmarkService.toggleBookmark(
+                                  reading.id,
+                                );
                                 // Force refresh the bookmark state
                                 ref
                                     .read(bookmarkRefreshProvider.notifier)

@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/auth_providers.dart';
-import 'login_page.dart';
-import '../../../../core/settings_providers.dart';
 import '../../../readings/presentation/pages/main_shell.dart';
 
 class WelcomePage extends ConsumerStatefulWidget {

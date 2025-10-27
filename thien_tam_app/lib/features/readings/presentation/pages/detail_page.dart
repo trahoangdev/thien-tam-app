@@ -8,6 +8,8 @@ import 'package:intl/intl.dart';
 import 'not_found_page.dart';
 import '../../../../core/settings_providers.dart';
 import '../../../tts/presentation/widgets/tts_widget.dart';
+import '../../../tts/presentation/widgets/sleep_mode_widget.dart';
+import '../../../tts/presentation/providers/tts_providers.dart';
 
 class DetailPage extends ConsumerStatefulWidget {
   final DateTime date;
@@ -73,6 +75,22 @@ class _DetailPageState extends ConsumerState<DetailPage> {
           ),
           centerTitle: true,
           backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.nightlight_round),
+              tooltip: 'Chế độ ngủ',
+              onPressed: () {
+                final sleepModeService = ref.read(sleepModeServiceProvider);
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) =>
+                      SleepModeWidget(sleepModeService: sleepModeService),
+                );
+              },
+            ),
+          ],
         ),
         loading: () => AppBar(
           title: Text(

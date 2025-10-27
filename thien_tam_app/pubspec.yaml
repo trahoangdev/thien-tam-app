@@ -2,7 +2,7 @@ name: thien_tam_app
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -30,58 +30,58 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  
+
   flutter_localizations:
     sdk: flutter
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
-  
+
   # HTTP client
   dio: ^5.7.0
-  
+
   # State management
   flutter_riverpod: ^2.5.1
-  
+
   # Internationalization
   intl: ^0.20.2
-  
+
   # Local storage & cache
   hive: ^2.2.3
   hive_flutter: ^1.1.0
-  
+
   # Navigation
   go_router: ^14.2.0
-  
+
   # Local notifications
   flutter_local_notifications: ^17.2.3
-  
+
   # Timezone support
   timezone: ^0.9.4
-  
+
   # Share
-  share_plus: ^10.1.2
-  
+  share_plus: ^7.2.2
+
   # Secure storage for tokens
   flutter_secure_storage: ^9.2.2
-  
+
   # URL launcher
   url_launcher: ^6.3.1
-  
+
   # Audio player for TTS
   audioplayers: ^6.5.1
-  
+
   # Path provider for file operations
   path_provider: ^2.1.4
   flutter_markdown: ^0.7.7+1
-  
+
   # File picker for admin audio upload
   file_picker: ^8.1.6
-  
+
   # PDF viewer
   syncfusion_flutter_pdfviewer: ^28.1.36
-  
+
   # Device info (required by Syncfusion PDF viewer)
   device_info_plus: ^11.5.0
 
@@ -95,7 +95,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
-  
+
   build_runner: ^2.4.9
   hive_generator: ^2.0.1
 
@@ -104,16 +104,14 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
-
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
+  assets:
+    - assets/sounds/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

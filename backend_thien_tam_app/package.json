@@ -9,6 +9,7 @@
     "start": "node dist/server.js",
     "seed": "ts-node src/seed/seed.ts",
     "seed:admin": "ts-node src/seed/seedAdmin.ts",
+    "cleanup:languages": "ts-node src/seed/cleanupLanguages.ts",
     "test": "jest",
     "test:api": "node test-api.js",
     "test:create-reading": "node test-create-reading.js",

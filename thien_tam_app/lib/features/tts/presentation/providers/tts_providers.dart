@@ -1,10 +1,18 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/tts_service.dart';
 import '../../../../core/settings_providers.dart';
+import '../../data/sleep_mode_service.dart';
 
 // TTS Service provider
 final ttsServiceProvider = Provider<TTSService>((ref) {
   return TTSService();
+});
+
+// Sleep Mode Service provider
+final sleepModeServiceProvider = ChangeNotifierProvider<SleepModeService>((
+  ref,
+) {
+  return SleepModeService();
 });
 
 // TTS Service status provider

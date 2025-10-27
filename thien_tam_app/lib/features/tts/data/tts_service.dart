@@ -184,6 +184,24 @@ class TTSService {
 
   // Initialize audio player
   Future<void> initialize() async {
+    // Set audio context to allow mixing with other audio sources
+    await _audioPlayer.setAudioContext(
+      AudioContext(
+        iOS: AudioContextIOS(
+          category: AVAudioSessionCategory.playback,
+          options: {AVAudioSessionOptions.mixWithOthers},
+        ),
+        android: AudioContextAndroid(
+          isSpeakerphoneOn: false,
+          stayAwake: true,
+          contentType: AndroidContentType.speech,
+          usageType: AndroidUsageType.media,
+          audioFocus:
+              AndroidAudioFocus.none, // Don't request focus - allow mixing
+        ),
+      ),
+    );
+
     _audioPlayer.onPlayerStateChanged.listen((PlayerState state) {
       _isPlaying = state == PlayerState.playing;
       _isPaused = state == PlayerState.paused;

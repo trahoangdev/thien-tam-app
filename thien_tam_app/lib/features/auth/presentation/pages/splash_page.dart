@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/auth_providers.dart';
 import 'welcome_page.dart';
 
 class SplashPage extends ConsumerStatefulWidget {
