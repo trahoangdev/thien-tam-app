@@ -16,13 +16,13 @@ class SleepModeWidget extends StatefulWidget {
 class _SleepModeWidgetState extends State<SleepModeWidget> {
   late SleepModeSettings _settings;
 
-  // Phật giáo color palette
-  static const Color _goldenBronze = Color(0xFFCD9B56); // Vàng đồng
-  static const Color _darkWood = Color(0xFF5D4E37); // Nâu gỗ tối
-  static const Color _lightWood = Color(0xFF8B7355); // Nâu gỗ sáng
-  static const Color _ivory = Color(0xFFFFFFF0); // Trắng ngà
-  static const Color _lotus = Color(0xFFFFB6C1); // Hồng sen nhạt
-  static const Color _bamboo = Color(0xFF7C9473); // Xanh tre
+  // Phật giáo color palette - Improved contrast
+  static const Color _goldenBronze = Color(0xFFE8B75F); // Vàng đồng sáng hơn
+  static const Color _darkWood = Color(0xFF3D2F1F); // Nâu gỗ tối hơn cho contrast
+  static const Color _lightWood = Color(0xFF6B5742); // Nâu gỗ
+  static const Color _ivory = Color(0xFFFFF9E6); // Trắng ngà sáng hơn
+  static const Color _lotus = Color(0xFFFFD4D4); // Hồng sen sáng
+  static const Color _bamboo = Color(0xFF90B887); // Xanh tre sáng
 
   @override
   void initState() {
@@ -54,10 +54,7 @@ class _SleepModeWidgetState extends State<SleepModeWidget> {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            _darkWood,
-            _lightWood.withOpacity(0.9),
-          ],
+          colors: [_darkWood, _lightWood.withOpacity(0.9)],
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
@@ -140,7 +137,7 @@ class _SleepModeWidgetState extends State<SleepModeWidget> {
                   Text(
                     'An lạc tâm thần',
                     style: TextStyle(
-                      color: _goldenBronze.withOpacity(0.7),
+                      color: _goldenBronze.withOpacity(0.9),
                       fontSize: 12,
                       fontStyle: FontStyle.italic,
                     ),
@@ -271,35 +268,32 @@ class _SleepModeWidgetState extends State<SleepModeWidget> {
           children: [
             Row(
               children: [
-                Text(
-                  '⏱️',
-                  style: const TextStyle(fontSize: 16),
-                ),
+                Text('⏱️', style: const TextStyle(fontSize: 16)),
                 const SizedBox(width: 8),
-                Text(
-                  'Thời gian',
-                  style: TextStyle(
-                    color: _ivory.withOpacity(0.8),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
+              Text(
+                'Thời gian',
+                style: TextStyle(
+                  color: _ivory,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
                 ),
+              ),
               ],
             ),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               decoration: BoxDecoration(
-                color: _goldenBronze.withOpacity(0.2),
+                color: _goldenBronze.withOpacity(0.25),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: _goldenBronze.withOpacity(0.3),
-                  width: 1,
+                  color: _goldenBronze.withOpacity(0.6),
+                  width: 1.5,
                 ),
               ),
               child: Text(
                 '${_settings.autoStopMinutes} phút',
                 style: TextStyle(
-                  color: _goldenBronze,
+                  color: _ivory,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -334,15 +328,21 @@ class _SleepModeWidgetState extends State<SleepModeWidget> {
   }
 
   Widget _buildToggle(
-      String label, String emoji, bool value, Function(bool) onChanged) {
+    String label,
+    String emoji,
+    bool value,
+    Function(bool) onChanged,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: _darkWood.withOpacity(0.3),
+        color: value
+            ? _goldenBronze.withOpacity(0.15)
+            : _darkWood.withOpacity(0.4),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: value ? _goldenBronze.withOpacity(0.5) : Colors.transparent,
-          width: 1,
+          color: value ? _goldenBronze.withOpacity(0.6) : _lightWood.withOpacity(0.3),
+          width: value ? 2 : 1,
         ),
       ),
       child: Row(
@@ -352,14 +352,14 @@ class _SleepModeWidgetState extends State<SleepModeWidget> {
             children: [
               Text(emoji, style: const TextStyle(fontSize: 18)),
               const SizedBox(width: 12),
-              Text(
-                label,
-                style: TextStyle(
-                  color: _ivory.withOpacity(0.9),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
+            Text(
+              label,
+              style: TextStyle(
+                color: _ivory,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
               ),
+            ),
             ],
           ),
           Switch(
@@ -379,20 +379,20 @@ class _SleepModeWidgetState extends State<SleepModeWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Text('🎵', style: const TextStyle(fontSize: 16)),
-            const SizedBox(width: 8),
+          Row(
+            children: [
+              Text('🎵', style: const TextStyle(fontSize: 16)),
+              const SizedBox(width: 8),
             Text(
               'Âm thanh nền',
               style: TextStyle(
-                color: _ivory.withOpacity(0.8),
+                color: _ivory,
                 fontSize: 14,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
               ),
             ),
-          ],
-        ),
+            ],
+          ),
         const SizedBox(height: 12),
         Wrap(
           spacing: 10,
@@ -422,9 +422,7 @@ class _SleepModeWidgetState extends State<SleepModeWidget> {
                   color: isSelected ? null : _darkWood.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: isSelected
-                        ? _goldenBronze
-                        : _ivory.withOpacity(0.1),
+                    color: isSelected ? _goldenBronze : _ivory.withOpacity(0.1),
                     width: isSelected ? 2 : 1,
                   ),
                   boxShadow: isSelected
@@ -458,9 +456,12 @@ class _SleepModeWidgetState extends State<SleepModeWidget> {
                     Text(
                       _getSoundLabel(sound),
                       style: TextStyle(
-                        color: isSelected ? _goldenBronze : _ivory,
-                        fontWeight:
-                            isSelected ? FontWeight.bold : FontWeight.normal,
+                        color: isSelected
+                            ? _goldenBronze
+                            : _ivory.withOpacity(0.95),
+                        fontWeight: isSelected
+                            ? FontWeight.bold
+                            : FontWeight.w600,
                         fontSize: 13,
                       ),
                     ),
@@ -480,10 +481,7 @@ class _SleepModeWidgetState extends State<SleepModeWidget> {
       height: 56,
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            _goldenBronze,
-            _goldenBronze.withOpacity(0.8),
-          ],
+          colors: [_goldenBronze, _goldenBronze.withOpacity(0.8)],
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
@@ -527,7 +525,8 @@ class _SleepModeWidgetState extends State<SleepModeWidget> {
   Widget _buildActiveControls(SleepModeService service) {
     final remainingMinutes = service.remainingSeconds ~/ 60;
     final remainingSeconds = service.remainingSeconds % 60;
-    final progress = service.remainingSeconds / (service.settings.autoStopMinutes * 60);
+    final progress =
+        service.remainingSeconds / (service.settings.autoStopMinutes * 60);
 
     return Column(
       children: [
@@ -567,10 +566,7 @@ class _SleepModeWidgetState extends State<SleepModeWidget> {
               // Time display
               Column(
                 children: [
-                  Text(
-                    '🕉️',
-                    style: const TextStyle(fontSize: 28),
-                  ),
+                  Text('🕉️', style: const TextStyle(fontSize: 28)),
                   const SizedBox(height: 8),
                   Text(
                     '${remainingMinutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}',
@@ -584,8 +580,9 @@ class _SleepModeWidgetState extends State<SleepModeWidget> {
                   Text(
                     'phút',
                     style: TextStyle(
-                      color: _goldenBronze.withOpacity(0.7),
+                      color: _goldenBronze,
                       fontSize: 12,
+                      fontWeight: FontWeight.w500,
                       fontStyle: FontStyle.italic,
                     ),
                   ),
@@ -607,8 +604,9 @@ class _SleepModeWidgetState extends State<SleepModeWidget> {
               Text(
                 'Âm lượng: ${(service.currentVolume * 100).toInt()}%',
                 style: TextStyle(
-                  color: _ivory.withOpacity(0.7),
+                  color: _ivory.withOpacity(0.9),
                   fontSize: 14,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
