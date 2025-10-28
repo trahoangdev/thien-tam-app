@@ -1,7 +1,7 @@
 import { Router } from "express";
 import jwt, { SignOptions } from "jsonwebtoken";
 import bcrypt from "bcrypt";
-import AdminUser from "../models/AdminUser";
+import User, { UserRole } from "../models/User";
 
 const r = Router();
 
@@ -90,7 +90,13 @@ r.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Email và mật khẩu là bắt buộc" });
     }
     
-    const u = await AdminUser.findOne({ email, isActive: true });
+    // Find user with ADMIN role only
+    const u = await User.findOne({ 
+      email, 
+      role: UserRole.ADMIN,
+      isActive: true 
+    });
+    
     if (!u) {
       return res.status(401).json({ message: "Email hoặc mật khẩu không đúng" });
     }
@@ -100,10 +106,13 @@ r.post("/login", async (req, res) => {
       return res.status(401).json({ message: "Email hoặc mật khẩu không đúng" });
     }
     
+    // Update last login
+    await u.updateLastLogin();
+    
     const access = jwt.sign(
-      { sub: (u._id as any).toString(), roles: u.roles },
+      { sub: (u._id as any).toString(), role: u.role },
       process.env.JWT_SECRET as string,
-      { expiresIn: "1h" } as SignOptions
+      { expiresIn: "7d" } as SignOptions
     );
     
     const refresh = jwt.sign(
@@ -118,7 +127,8 @@ r.post("/login", async (req, res) => {
       user: {
         id: u._id,
         email: u.email,
-        roles: u.roles,
+        name: u.name,
+        role: u.role,
       }
     });
   } catch (error) {
@@ -200,16 +210,16 @@ r.post("/refresh", async (req, res) => {
     }
     
     const p = jwt.verify(refresh, process.env.REFRESH_SECRET as string) as any;
-    const u = await AdminUser.findById(p.sub);
+    const u = await User.findById(p.sub);
     
-    if (!u || !u.isActive) {
+    if (!u || !u.isActive || u.role !== UserRole.ADMIN) {
       return res.status(401).json({ message: "Token không hợp lệ" });
     }
     
     const access = jwt.sign(
-      { sub: (u._id as any).toString(), roles: u.roles },
+      { sub: (u._id as any).toString(), role: u.role },
       process.env.JWT_SECRET as string,
-      { expiresIn: "7 days" } as SignOptions
+      { expiresIn: "7d" } as SignOptions
     );
     
     res.json({ access });
@@ -282,10 +292,10 @@ r.get("/me", async (req, res) => {
     
     const token = h.slice(7);
     const payload = jwt.verify(token, process.env.JWT_SECRET as string) as any;
-    const u = await AdminUser.findById(payload.sub).select("-passwordHash");
+    const u = await User.findById(payload.sub).select("-passwordHash");
     
-    if (!u || !u.isActive) {
-      return res.status(401).json({ message: "User không tồn tại" });
+    if (!u || !u.isActive || u.role !== UserRole.ADMIN) {
+      return res.status(401).json({ message: "User không tồn tại hoặc không có quyền admin" });
     }
     
     res.json({ user: u });

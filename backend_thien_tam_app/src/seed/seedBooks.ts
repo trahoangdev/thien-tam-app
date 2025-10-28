@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import Book from "../models/Book";
 import { BookCategory } from "../models/BookCategory";
-import AdminUser from "../models/AdminUser";
+import User, { UserRole } from "../models/User";
 
 dotenv.config();
 
@@ -15,13 +15,17 @@ async function seedBooks() {
     console.log("✅ Connected to MongoDB");
 
     // Get or create admin user for uploadedBy
-    let admin = await AdminUser.findOne({ email: "admin@thientam.com" });
+    let admin = await User.findOne({ email: "admin@thientam.local", role: UserRole.ADMIN });
     if (!admin) {
-      admin = await AdminUser.create({
-        email: "admin@thientam.com",
-        username: "admin",
-        password: "admin123", // Will be hashed by pre-save hook
-        fullName: "System Admin",
+      const bcrypt = require('bcrypt');
+      const passwordHash = await bcrypt.hash("ThienTam@2025", 10);
+      admin = await User.create({
+        email: "admin@thientam.local",
+        passwordHash,
+        name: "System Admin",
+        role: UserRole.ADMIN,
+        isActive: true,
+        isEmailVerified: true,
       });
       console.log("✅ Created admin user");
     }

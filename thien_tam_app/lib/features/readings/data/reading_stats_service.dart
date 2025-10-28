@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
+import '../../auth/data/user_stats_api.dart';
+import '../../auth/presentation/providers/auth_providers.dart';
 
 class ReadingStats {
   final int totalReadings;
@@ -116,13 +118,17 @@ class ReadingStatsService {
 }
 
 // Riverpod providers
+final userStatsApiProvider = Provider((ref) => UserStatsApi());
+
 final readingStatsProvider =
     StateNotifierProvider<ReadingStatsNotifier, ReadingStats>((ref) {
-      return ReadingStatsNotifier();
+      return ReadingStatsNotifier(ref);
     });
 
 class ReadingStatsNotifier extends StateNotifier<ReadingStats> {
-  ReadingStatsNotifier()
+  final Ref _ref;
+
+  ReadingStatsNotifier(this._ref)
     : super(
         const ReadingStats(
           totalReadings: 0,
@@ -134,6 +140,30 @@ class ReadingStatsNotifier extends StateNotifier<ReadingStats> {
   }
 
   Future<void> _loadStats() async {
+    // Try to load from backend if user is logged in
+    final token = _ref.read(accessTokenProvider);
+
+    if (token != null && token.isNotEmpty) {
+      try {
+        final api = _ref.read(userStatsApiProvider);
+        final statsData = await api.getMyStats(token);
+
+        state = ReadingStats(
+          totalReadings: statsData['totalReadings'] ?? 0,
+          totalReadingTime: statsData['totalReadingTime'] ?? 0,
+          streakDays: statsData['streakDays'] ?? 0,
+        );
+
+        // Also save to local cache
+        await ReadingStatsService.saveStats(state);
+        return;
+      } catch (e) {
+        print('[ReadingStatsNotifier] Error loading from backend: $e');
+        // Fall back to local storage
+      }
+    }
+
+    // Load from local storage (Hive)
     final stats = await ReadingStatsService.getStats();
     state = stats;
   }
@@ -152,5 +182,38 @@ class ReadingStatsNotifier extends StateNotifier<ReadingStats> {
 
   Future<void> refreshStats() async {
     await _loadStats();
+  }
+
+  /// Update reading stats on backend (when user is logged in)
+  Future<void> updateReadingOnBackend({
+    required String readingId,
+    required int timeSpent,
+  }) async {
+    final token = _ref.read(accessTokenProvider);
+
+    if (token != null && token.isNotEmpty) {
+      try {
+        final api = _ref.read(userStatsApiProvider);
+        final statsData = await api.updateReadingStats(
+          token: token,
+          readingId: readingId,
+          timeSpent: timeSpent,
+        );
+
+        // Update local state with backend data
+        state = ReadingStats(
+          totalReadings: statsData['totalReadings'] ?? state.totalReadings,
+          totalReadingTime:
+              statsData['totalReadingTime'] ?? state.totalReadingTime,
+          streakDays: statsData['streakDays'] ?? state.streakDays,
+        );
+
+        // Save to local cache
+        await ReadingStatsService.saveStats(state);
+      } catch (e) {
+        print('[ReadingStatsNotifier] Error updating backend: $e');
+        // Continue with local update only
+      }
+    }
   }
 }

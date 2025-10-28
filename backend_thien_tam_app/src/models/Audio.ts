@@ -83,7 +83,7 @@ const AudioSchema: Schema = new Schema(
     },
     uploadedBy: {
       type: Schema.Types.ObjectId,
-      ref: 'AdminUser',
+      ref: 'User',
       required: [true, 'Uploader is required'],
     },
     playCount: {

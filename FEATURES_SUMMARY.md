@@ -30,13 +30,12 @@
 |-----|-----------|-------|-------|--------|----------|
 | 1 | **Reading (Bài đọc)** | CRUD bài đọc Phật giáo hàng ngày | `Reading.ts` | `/readings`, `/admin/readings` | Admin Panel |
 | 2 | **Topic (Chủ đề)** | CRUD chủ đề/danh mục bài đọc | `Topic.ts` | `/topics` | Admin Panel |
-| 3 | **User (Người dùng)** | CRUD tài khoản người dùng thường | `User.ts` | `/user-auth`, `/admin/users` | Register Page + Admin Panel |
-| 4 | **AdminUser (Quản trị viên)** | CRUD tài khoản admin với roles | `AdminUser.ts` | `/admin`, `/auth` | Admin Login |
-| 5 | **Audio (Thư viện âm thanh)** | CRUD audio Phật giáo với Cloudinary | `Audio.ts` | `/audio` | Admin Panel + Audio Library |
-| 6 | **Book (Kinh sách PDF)** | CRUD kinh sách Phật giáo với PDF viewer | `Book.ts` | `/books` | Admin Panel + Books Library |
-| 7 | **BookCategory (Danh mục sách)** | CRUD danh mục cho thư viện kinh sách | `BookCategory.ts` | `/book-categories` | Admin Panel + Books Library |
+| 3 | **User (Unified)** | CRUD tài khoản với role-based access (USER/ADMIN) | `User.ts` | `/user-auth`, `/admin/users`, `/auth` | Register Page + Admin Panel + Admin Login |
+| 4 | **Audio (Thư viện âm thanh)** | CRUD audio Phật giáo với Cloudinary | `Audio.ts` | `/audio` | Admin Panel + Audio Library |
+| 5 | **Book (Kinh sách PDF)** | CRUD kinh sách Phật giáo với PDF viewer | `Book.ts` | `/books` | Admin Panel + Books Library |
+| 6 | **BookCategory (Danh mục sách)** | CRUD danh mục cho thư viện kinh sách | `BookCategory.ts` | `/book-categories` | Admin Panel + Books Library |
 
-**Tổng: 7 bảng CRUD**
+**Tổng: 6 bảng CRUD**
 
 ---
 
@@ -92,9 +91,9 @@
 | Loại chức năng | Số lượng |
 |----------------|----------|
 | Chức năng cơ bản | 15 |
-| CRUD | 7 |
+| CRUD | 6 |
 | Chức năng nâng cao | 38 |
-| **TỔNG CỘNG** | **60 chức năng** |
+| **TỔNG CỘNG** | **59 chức năng** |
 
 ---
 
@@ -188,14 +187,14 @@ ThienTam APP/
 ### Admin Roles
 | Role | Quyền hạn |
 |------|-----------|
-| **Content Manager** | CRUD Readings, Topics, Audio, Books |
-| **User Manager** | CRUD Users (tạo, sửa, xóa, khóa tài khoản) |
-| **Super Admin** | Full system access + Quản lý admin users |
+| **ADMIN** | Full system access: CRUD Readings, Topics, Audio, Books, Users |
 
 ### Ghi chú
+- **Unified User Model:** Đã merge AdminUser vào User với field `role: 'USER' | 'ADMIN'`
 - Hệ thống đã loại bỏ các tier Premium/VIP để đơn giản hóa
-- Tất cả user đăng ký đều có quyền truy cập đầy đủ các tính năng
-- Admin có thể tạo user mới và quản lý trạng thái tài khoản
+- Tất cả user đăng ký đều có role `USER` với quyền truy cập đầy đủ các tính năng
+- Admin có role `ADMIN` và có thể quản lý toàn bộ hệ thống
+- Chỉ còn 2 roles: USER và ADMIN (đã bỏ Editor, Super Admin)
 
 ---
 
@@ -355,16 +354,16 @@ ThienTam APP/
 ## 📞 LIÊN HỆ
 
 - **GitHub:** https://github.com/trahoangdev/thien-tam-app
-- **Version:** 1.3.0
+- **Version:** 1.3.1
 - **Last Updated:** October 28, 2025
 
 ---
 
 ## 📈 THỐNG KÊ DỰ ÁN
 
-- **Tổng số chức năng:** 60
+- **Tổng số chức năng:** 59
 - **Backend Routes:** 9 main routes
-- **Database Models:** 7 models (Reading, Topic, User, AdminUser, Audio, Book, BookCategory, ChatConversation)
+- **Database Models:** 6 models (Reading, Topic, User, Audio, Book, BookCategory)
 - **Frontend Features:** 8 feature modules (Readings, Auth, Admin, Audio, Books, Chat, TTS, Notifications)
 - **Lines of Code:** ~25,000+ (Backend + Frontend)
 - **API Endpoints:** 70+ endpoints

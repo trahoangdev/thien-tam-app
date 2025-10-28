@@ -90,7 +90,7 @@ class AdminHomePage extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Role: ${user?.roles.join(', ') ?? 'N/A'}',
+              'Role: ${user?.role ?? 'N/A'}',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 color: Theme.of(context).colorScheme.primary,
               ),

@@ -2,22 +2,28 @@
 class AdminUser {
   final String id;
   final String email;
-  final List<String> roles;
+  final String name;
+  final String role; // Changed from List<String> roles to single String role
 
-  AdminUser({required this.id, required this.email, required this.roles});
+  AdminUser({
+    required this.id,
+    required this.email,
+    required this.name,
+    required this.role,
+  });
 
   factory AdminUser.fromJson(Map<String, dynamic> json) {
     return AdminUser(
-      id: json['id'] as String,
+      id: json['id'].toString(), // Convert to string to handle ObjectId
       email: json['email'] as String,
-      roles: (json['roles'] as List<dynamic>).map((e) => e as String).toList(),
+      name: json['name'] as String? ?? '',
+      role: json['role'] as String? ?? 'USER',
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {'id': id, 'email': email, 'roles': roles};
+    return {'id': id, 'email': email, 'name': name, 'role': role};
   }
 
-  bool get isAdmin => roles.contains('ADMIN');
-  bool get isEditor => roles.contains('EDITOR');
+  bool get isAdmin => role == 'ADMIN';
 }

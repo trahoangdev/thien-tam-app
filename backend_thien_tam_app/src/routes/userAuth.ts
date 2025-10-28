@@ -618,7 +618,7 @@ router.put('/profile', requireAuth, async (req, res) => {
       user.name = updateData.name;
     }
     
-    if (updateData.preferences) {
+    if (updateData.preferences && user.preferences) {
       if (updateData.preferences.theme) {
         user.preferences.theme = updateData.preferences.theme;
       }

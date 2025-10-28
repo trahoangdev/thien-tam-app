@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 import { connectDB } from "../db";
-import AdminUser from "../models/AdminUser";
+import User, { UserRole } from "../models/User";
 import bcrypt from "bcrypt";
 
 (async () => {
@@ -18,15 +18,16 @@ import bcrypt from "bcrypt";
     const passwordHash = await bcrypt.hash(password, 10);
 
     // Create or update admin user
-    const result = await AdminUser.updateOne(
+    const result = await User.updateOne(
       { email },
       {
         $set: {
           email,
           passwordHash,
           name,
-          roles: ["ADMIN"],
+          role: UserRole.ADMIN,
           isActive: true,
+          isEmailVerified: true,
         },
       },
       { upsert: true }

@@ -6,7 +6,7 @@ declare global {
   namespace Express {
     interface Request {
       userId?: string;
-      roles?: string[];
+      userRole?: string; // Single role: 'USER' or 'ADMIN'
     }
   }
 }
@@ -24,7 +24,7 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction) => 
     const payload = jwt.verify(token, process.env.JWT_SECRET as string) as any;
     
     req.userId = payload.sub;
-    req.roles = payload.roles || [];
+    req.userRole = payload.role || 'USER';
     
     next();
   } catch (error) {
@@ -32,17 +32,29 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction) => 
   }
 };
 
-// Middleware phân quyền theo roles
+// Middleware yêu cầu quyền ADMIN
+export const requireAdmin = (req: Request, res: Response, next: NextFunction) => {
+  if (req.userRole !== 'ADMIN') {
+    return res.status(403).json({ 
+      message: "Chỉ admin mới có quyền truy cập",
+      currentRole: req.userRole,
+      required: 'ADMIN'
+    });
+  }
+  
+  next();
+};
+
+// Middleware kiểm tra role (legacy support)
 export const requireRoles = (...allowed: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
-    const roles: string[] = req.roles || [];
-    const ok = roles.some(r => allowed.includes(r));
+    const role = req.userRole || 'USER';
     
-    if (!ok) {
+    if (!allowed.includes(role)) {
       return res.status(403).json({ 
         message: "Không có quyền truy cập",
         required: allowed,
-        current: roles
+        current: role
       });
     }
     

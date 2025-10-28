@@ -21,10 +21,7 @@ class SettingsPage extends ConsumerStatefulWidget {
 }
 
 class _SettingsPageState extends ConsumerState<SettingsPage> {
-  int _tempFontSize = 1;
-  double _tempLineHeight = 1.8;
   ThemeMode _tempThemeMode = ThemeMode.system;
-  bool _hasUnsavedChanges = false;
 
   @override
   void initState() {
@@ -32,8 +29,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     // Initialize temp values from current settings
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final ref = this.ref;
-      _tempFontSize = ref.read(fontSizeProvider);
-      _tempLineHeight = ref.read(lineHeightProvider);
       _tempThemeMode = ref.read(themeModeProvider);
     });
   }
@@ -102,132 +97,19 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 DropdownMenuItem(value: ThemeMode.light, child: Text('Sáng')),
                 DropdownMenuItem(value: ThemeMode.dark, child: Text('Tối')),
               ],
-              onChanged: (mode) {
+              onChanged: (mode) async {
                 if (mode != null) {
                   setState(() {
                     _tempThemeMode = mode;
-                    _hasUnsavedChanges = true;
                   });
+                  // Save immediately
+                  final settingsService = ref.read(settingsServiceProvider);
+                  await settingsService.setThemeMode(mode);
+                  ref.read(themeModeProvider.notifier).state = mode;
                 }
               },
             ),
           ),
-
-          const Divider(),
-
-          // Reading Section
-          _SectionHeader(title: 'Đọc Bài'),
-
-          // Font Size
-          ListTile(
-            leading: const Icon(Icons.format_size),
-            title: const Text('Kích thước chữ'),
-            subtitle: Text(_getFontSizeText(_tempFontSize)),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                const Text('Nhỏ'),
-                Expanded(
-                  child: Slider(
-                    value: _tempFontSize.toDouble(),
-                    min: 0,
-                    max: 2,
-                    divisions: 2,
-                    label: _getFontSizeText(_tempFontSize),
-                    onChanged: (value) {
-                      setState(() {
-                        _tempFontSize = value.toInt();
-                        _hasUnsavedChanges = true;
-                      });
-                    },
-                  ),
-                ),
-                const Text('Lớn'),
-              ],
-            ),
-          ),
-
-          // Line Height
-          ListTile(
-            leading: const Icon(Icons.format_line_spacing),
-            title: const Text('Khoảng cách dòng'),
-            subtitle: Text('${_tempLineHeight.toStringAsFixed(1)}x'),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                const Text('Hẹp'),
-                Expanded(
-                  child: Slider(
-                    value: _tempLineHeight,
-                    min: 1.2,
-                    max: 2.5,
-                    divisions: 13,
-                    label: '${_tempLineHeight.toStringAsFixed(1)}x',
-                    onChanged: (value) {
-                      setState(() {
-                        _tempLineHeight = value;
-                        _hasUnsavedChanges = true;
-                      });
-                    },
-                  ),
-                ),
-                const Text('Rộng'),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Save Button ngay sau phần chỉnh sửa font
-          if (_hasUnsavedChanges) ...[
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: _saveSettings,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        backgroundColor: Theme.of(context).colorScheme.primary,
-                        foregroundColor: Theme.of(
-                          context,
-                        ).colorScheme.onPrimary,
-                      ),
-                      icon: const Icon(Icons.save),
-                      label: const Text(
-                        'Lưu cài đặt',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: _resetSettings,
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                      icon: const Icon(Icons.refresh),
-                      label: const Text(
-                        'Đặt lại',
-                        style: TextStyle(fontSize: 14),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-          ],
 
           const Divider(),
 
@@ -392,7 +274,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           ListTile(
             leading: const Icon(Icons.info_outline),
             title: const Text('Phiên bản'),
-            subtitle: const Text('1.0.0'),
+            subtitle: const Text('1.3.0'),
           ),
 
           ListTile(
@@ -631,65 +513,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     );
   }
 
-  Future<void> _saveSettings() async {
-    final settingsService = ref.read(settingsServiceProvider);
-
-    try {
-      // Save font size
-      await settingsService.setFontSize(_tempFontSize);
-      ref.read(fontSizeProvider.notifier).state = _tempFontSize;
-
-      // Save line height
-      await settingsService.setLineHeight(_tempLineHeight);
-      ref.read(lineHeightProvider.notifier).state = _tempLineHeight;
-
-      // Save theme mode
-      await settingsService.setThemeMode(_tempThemeMode);
-      ref.read(themeModeProvider.notifier).state = _tempThemeMode;
-
-      setState(() {
-        _hasUnsavedChanges = false;
-      });
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Đã lưu cài đặt thành công'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Lỗi khi lưu cài đặt: $e'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      }
-    }
-  }
-
-  void _resetSettings() {
-    setState(() {
-      _tempFontSize = ref.read(fontSizeProvider);
-      _tempLineHeight = ref.read(lineHeightProvider);
-      _tempThemeMode = ref.read(themeModeProvider);
-      _hasUnsavedChanges = false;
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Đã đặt lại cài đặt'),
-        backgroundColor: Colors.orange,
-        duration: Duration(seconds: 2),
-      ),
-    );
-  }
-
   String _getThemeModeText(ThemeMode mode) {
     switch (mode) {
       case ThemeMode.light:
@@ -698,17 +521,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         return 'Tối';
       default:
         return 'Theo hệ thống';
-    }
-  }
-
-  String _getFontSizeText(int size) {
-    switch (size) {
-      case 0:
-        return 'Nhỏ (14px)';
-      case 2:
-        return 'Lớn (18px)';
-      default:
-        return 'Vừa (16px)';
     }
   }
 }

@@ -24,6 +24,7 @@ class DetailPage extends ConsumerStatefulWidget {
 class _DetailPageState extends ConsumerState<DetailPage> {
   DateTime? _startTime;
   Timer? _readingTimer;
+  String? _currentReadingId;
 
   @override
   void initState() {
@@ -50,12 +51,32 @@ class _DetailPageState extends ConsumerState<DetailPage> {
     if (_startTime != null) {
       final readingTime = DateTime.now().difference(_startTime!).inMinutes;
       if (readingTime > 0) {
+        // Update local stats
         await ref
             .read(readingStatsProvider.notifier)
             .addReading(readingTimeMinutes: readingTime);
+
+        // If we have a reading ID and user is logged in, update backend
+        if (_currentReadingId != null) {
+          await ref
+              .read(readingStatsProvider.notifier)
+              .updateReadingOnBackend(
+                readingId: _currentReadingId!,
+                timeSpent: readingTime,
+              );
+        }
+
         _startTime = DateTime.now(); // Reset start time
       }
     }
+  }
+
+  void _showReadingSettings(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _ReadingSettingsSheet(),
+    );
   }
 
   @override
@@ -76,6 +97,13 @@ class _DetailPageState extends ConsumerState<DetailPage> {
           centerTitle: true,
           backgroundColor: Theme.of(context).colorScheme.inversePrimary,
           actions: [
+            IconButton(
+              icon: const Icon(Icons.text_fields),
+              tooltip: 'Cài đặt đọc',
+              onPressed: () {
+                _showReadingSettings(context);
+              },
+            ),
             IconButton(
               icon: const Icon(Icons.nightlight_round),
               tooltip: 'Chế độ ngủ',
@@ -136,6 +164,15 @@ class _DetailPageState extends ConsumerState<DetailPage> {
             }
           } else {
             reading = readings.first;
+          }
+
+          // Set current reading ID for stats tracking
+          if (_currentReadingId != reading.id) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              setState(() {
+                _currentReadingId = reading.id;
+              });
+            });
           }
 
           return SingleChildScrollView(
@@ -332,5 +369,216 @@ class _DetailPageState extends ConsumerState<DetailPage> {
         },
       ),
     );
+  }
+}
+
+// Reading Settings Bottom Sheet Widget
+class _ReadingSettingsSheet extends ConsumerStatefulWidget {
+  const _ReadingSettingsSheet();
+
+  @override
+  ConsumerState<_ReadingSettingsSheet> createState() =>
+      _ReadingSettingsSheetState();
+}
+
+class _ReadingSettingsSheetState extends ConsumerState<_ReadingSettingsSheet> {
+  late int _tempFontSize;
+  late double _tempLineHeight;
+
+  @override
+  void initState() {
+    super.initState();
+    _tempFontSize = ref.read(fontSizeProvider);
+    _tempLineHeight = ref.read(lineHeightProvider);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
+                children: [
+                  Icon(
+                    Icons.text_fields,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Cài Đặt Đọc',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // Font Size Setting
+              Text(
+                'Kích thước chữ',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Icon(Icons.text_fields, size: 16),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Slider(
+                      value: _tempFontSize.toDouble(),
+                      min: 0,
+                      max: 2,
+                      divisions: 2,
+                      label: _getFontSizeLabel(_tempFontSize),
+                      onChanged: (value) {
+                        setState(() {
+                          _tempFontSize = value.toInt();
+                        });
+                        ref.read(fontSizeProvider.notifier).state =
+                            _tempFontSize;
+                        ref
+                            .read(settingsServiceProvider)
+                            .setFontSize(_tempFontSize);
+                      },
+                    ),
+                  ),
+                  Text(
+                    _getFontSizeLabel(_tempFontSize),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // Line Height Setting
+              Text(
+                'Khoảng cách dòng',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Icon(Icons.format_line_spacing, size: 16),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Slider(
+                      value: _tempLineHeight,
+                      min: 1.0,
+                      max: 3.0,
+                      divisions: 20,
+                      label: '${_tempLineHeight.toStringAsFixed(1)}x',
+                      onChanged: (value) {
+                        setState(() {
+                          _tempLineHeight = value;
+                        });
+                        ref.read(lineHeightProvider.notifier).state =
+                            _tempLineHeight;
+                        ref
+                            .read(settingsServiceProvider)
+                            .setLineHeight(_tempLineHeight);
+                      },
+                    ),
+                  ),
+                  Text(
+                    '${_tempLineHeight.toStringAsFixed(1)}x',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Preview Text
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.surfaceVariant.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.outline.withOpacity(0.2),
+                  ),
+                ),
+                child: Text(
+                  'Đây là đoạn văn mẫu để xem trước kích thước chữ và khoảng cách dòng. '
+                  'Điều chỉnh các thanh trượt bên trên để tìm cài đặt phù hợp nhất với bạn.',
+                  style: TextStyle(
+                    fontSize: _getFontSize(_tempFontSize),
+                    height: _tempLineHeight,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Apply Button
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  icon: const Icon(Icons.check),
+                  label: const Text('Áp dụng'),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _getFontSizeLabel(int size) {
+    switch (size) {
+      case 0:
+        return 'Nhỏ';
+      case 2:
+        return 'Lớn';
+      default:
+        return 'Vừa';
+    }
+  }
+
+  double _getFontSize(int size) {
+    switch (size) {
+      case 0:
+        return 14.0;
+      case 2:
+        return 18.0;
+      default:
+        return 16.0;
+    }
   }
 }

@@ -150,7 +150,7 @@ const BookSchema = new Schema<IBook>(
     },
     uploadedBy: {
       type: Schema.Types.ObjectId,
-      ref: 'AdminUser',
+      ref: 'User',
       required: true,
     },
   },

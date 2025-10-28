@@ -14,7 +14,7 @@ import chatRouter from "./routes/chat";
 import audioRouter from "./routes/audio";
 import booksRouter from "./routes/books";
 import bookCategoriesRouter from "./routes/bookCategories";
-import { requireAuth, requireRoles } from "./middlewares/auth";
+import { requireAuth, requireAdmin } from "./middlewares/auth";
 import { errorHandler } from "./middlewares/error";
 import { setupSwagger } from "./config/swagger";
 
@@ -56,9 +56,9 @@ app.get("/healthz", (_req, res) => res.json({ ok: true }));
 app.use("/auth", authLimiter, authRouter); // Admin auth
 app.use("/user-auth", authLimiter, userAuthRouter); // User auth
 
-// Protected admin routes (require authentication and ADMIN or EDITOR role)
-app.use("/admin", requireAuth, requireRoles("ADMIN", "EDITOR"), adminRouter);
-app.use("/admin", requireAuth, requireRoles("ADMIN", "EDITOR"), topicsRouter);
+// Protected admin routes (require authentication and ADMIN role)
+app.use("/admin", requireAuth, requireAdmin, adminRouter);
+app.use("/admin", requireAuth, requireAdmin, topicsRouter);
 
 // Error handler
 app.use(errorHandler);
