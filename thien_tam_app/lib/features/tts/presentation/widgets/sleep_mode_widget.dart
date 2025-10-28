@@ -18,7 +18,9 @@ class _SleepModeWidgetState extends State<SleepModeWidget> {
 
   // Phật giáo color palette - Improved contrast
   static const Color _goldenBronze = Color(0xFFE8B75F); // Vàng đồng sáng hơn
-  static const Color _darkWood = Color(0xFF3D2F1F); // Nâu gỗ tối hơn cho contrast
+  static const Color _darkWood = Color(
+    0xFF3D2F1F,
+  ); // Nâu gỗ tối hơn cho contrast
   static const Color _lightWood = Color(0xFF6B5742); // Nâu gỗ
   static const Color _ivory = Color(0xFFFFF9E6); // Trắng ngà sáng hơn
   static const Color _lotus = Color(0xFFFFD4D4); // Hồng sen sáng
@@ -270,14 +272,14 @@ class _SleepModeWidgetState extends State<SleepModeWidget> {
               children: [
                 Text('⏱️', style: const TextStyle(fontSize: 16)),
                 const SizedBox(width: 8),
-              Text(
-                'Thời gian',
-                style: TextStyle(
-                  color: _ivory,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
+                Text(
+                  'Thời gian',
+                  style: TextStyle(
+                    color: _ivory,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
               ],
             ),
             Container(
@@ -341,7 +343,9 @@ class _SleepModeWidgetState extends State<SleepModeWidget> {
             : _darkWood.withOpacity(0.4),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: value ? _goldenBronze.withOpacity(0.6) : _lightWood.withOpacity(0.3),
+          color: value
+              ? _goldenBronze.withOpacity(0.6)
+              : _lightWood.withOpacity(0.3),
           width: value ? 2 : 1,
         ),
       ),
@@ -352,14 +356,14 @@ class _SleepModeWidgetState extends State<SleepModeWidget> {
             children: [
               Text(emoji, style: const TextStyle(fontSize: 18)),
               const SizedBox(width: 12),
-            Text(
-              label,
-              style: TextStyle(
-                color: _ivory,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
+              Text(
+                label,
+                style: TextStyle(
+                  color: _ivory,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
             ],
           ),
           Switch(
@@ -379,10 +383,10 @@ class _SleepModeWidgetState extends State<SleepModeWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-          Row(
-            children: [
-              Text('🎵', style: const TextStyle(fontSize: 16)),
-              const SizedBox(width: 8),
+        Row(
+          children: [
+            Text('🎵', style: const TextStyle(fontSize: 16)),
+            const SizedBox(width: 8),
             Text(
               'Âm thanh nền',
               style: TextStyle(
@@ -391,8 +395,8 @@ class _SleepModeWidgetState extends State<SleepModeWidget> {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            ],
-          ),
+          ],
+        ),
         const SizedBox(height: 12),
         Wrap(
           spacing: 10,
@@ -594,25 +598,9 @@ class _SleepModeWidgetState extends State<SleepModeWidget> {
 
         const SizedBox(height: 32),
 
-        // Volume indicator
-        if (service.currentVolume < 1.0) ...[
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text('🔉', style: const TextStyle(fontSize: 16)),
-              const SizedBox(width: 8),
-              Text(
-                'Âm lượng: ${(service.currentVolume * 100).toInt()}%',
-                style: TextStyle(
-                  color: _ivory.withOpacity(0.9),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-        ],
+        // Volume control slider
+        _buildVolumeControl(service),
+        const SizedBox(height: 20),
 
         // Control button - Dừng
         _buildControlButton(
@@ -622,6 +610,81 @@ class _SleepModeWidgetState extends State<SleepModeWidget> {
           isDestructive: true,
         ),
       ],
+    );
+  }
+
+  Widget _buildVolumeControl(SleepModeService service) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: BoxDecoration(
+        color: _darkWood.withOpacity(0.4),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _goldenBronze.withOpacity(0.3), width: 1),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Text('🔉', style: const TextStyle(fontSize: 18)),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Âm lượng nền',
+                    style: TextStyle(
+                      color: _ivory,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: _goldenBronze.withOpacity(0.25),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: _goldenBronze.withOpacity(0.6),
+                    width: 1.5,
+                  ),
+                ),
+                child: Text(
+                  '${(service.currentVolume * 100).toInt()}%',
+                  style: TextStyle(
+                    color: _ivory,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          SliderTheme(
+            data: SliderThemeData(
+              activeTrackColor: _goldenBronze,
+              inactiveTrackColor: _goldenBronze.withOpacity(0.2),
+              thumbColor: _ivory,
+              overlayColor: _goldenBronze.withOpacity(0.2),
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
+              overlayShape: const RoundSliderOverlayShape(overlayRadius: 20),
+            ),
+            child: Slider(
+              value: service.currentVolume,
+              min: 0.0,
+              max: 1.0,
+              onChanged: (value) {
+                service.setVolume(value);
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 

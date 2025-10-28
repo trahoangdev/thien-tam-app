@@ -77,8 +77,13 @@
 | 31 | **Book Categories & Search** | Phân loại và tìm kiếm kinh sách | Full-text Search + Filters |
 | 32 | **Book Category Management** | CRUD danh mục sách với icon, color, order | Custom Admin UI |
 | 33 | **Dynamic Category Filtering** | Lọc kinh sách theo danh mục động | Riverpod State Management |
+| 34 | **Sleep Mode** | Chế độ ngủ với timer, fade out, ambient sounds | AudioPlayers + ChangeNotifier |
+| 35 | **Ambient Background Sounds** | Âm thanh nền (mưa, chùa, thiên nhiên) cho thiền định | Asset Audio Files |
+| 36 | **Auto-Stop Timer** | Tự động dừng audio sau thời gian cài đặt | Dart Timer |
+| 37 | **Volume Fade Out** | Giảm âm lượng dần trước khi dừng | Progressive Volume Control |
+| 38 | **Real-time Volume Control** | Điều chỉnh âm lượng nền khi đang phát | Slider + Audio Service |
 
-**Tổng: 33 chức năng nâng cao**
+**Tổng: 38 chức năng nâng cao**
 
 ---
 
@@ -88,8 +93,8 @@
 |----------------|----------|
 | Chức năng cơ bản | 15 |
 | CRUD | 7 |
-| Chức năng nâng cao | 33 |
-| **TỔNG CỘNG** | **55 chức năng** |
+| Chức năng nâng cao | 38 |
+| **TỔNG CỘNG** | **60 chức năng** |
 
 ---
 
@@ -208,7 +213,16 @@ ThienTam APP/
 - Audio player với loop, seek, duration tracking
 - Thống kê lượt nghe
 
-### 3. 📚 Books Library (NEW!)
+### 3. 🌙 Sleep Mode (NEW!)
+- Timer tự động dừng với countdown (5-120 phút)
+- 4 âm thanh ambient thiền định (Mưa, Chùa, Thiên nhiên, Im lặng)
+- Fade out âm lượng tự động trong 2 phút cuối
+- Chuông nhẹ báo kết thúc
+- Volume control slider real-time
+- Buddhist-themed UI với Lotus 🪷 và Om 🕉️
+- Mandala-style circular progress timer
+
+### 4. 📚 Books Library
 - Upload PDF kinh sách từ file hoặc URL Cloudinary
 - Quản lý kinh sách Phật giáo từ Admin Panel
 - PDF viewer trực tuyến (Syncfusion)
@@ -218,18 +232,18 @@ ThienTam APP/
 - Thống kê lượt xem và tải xuống
 - Zoom, navigation, page jump trong PDF viewer
 
-### 4. 📅 Buddhist Calendar
+### 5. 📅 Buddhist Calendar
 - Lịch âm dương chính xác
 - Hiển thị ngày lễ Phật giáo
 - Tích hợp với bài đọc hàng ngày
 
-### 5. 📊 Reading Analytics
+### 6. 📊 Reading Analytics
 - Theo dõi số bài đọc
 - Thời gian đọc
 - Chuỗi ngày liên tiếp
 - Lịch sử chi tiết
 
-### 6. 🎨 Customization
+### 7. 🎨 Customization
 - Dark/Light mode
 - Font size adjustment
 - Line height adjustment
@@ -238,6 +252,36 @@ ThienTam APP/
 ---
 
 ## 🆕 CẬP NHẬT GẦN ĐÂY
+
+### Version 1.3.0 (October 28, 2025) - Sleep Mode & Improvements
+- ✅ **Sleep Mode - Chế độ ngủ thiền định**
+  - Timer tự động dừng (5-120 phút)
+  - Âm thanh nền ambient: Mưa 🌧️, Chùa 🛕, Thiên nhiên 🍃, Im lặng 🤫
+  - Fade out âm lượng dần trong 2 phút cuối
+  - Chuông nhẹ khi kết thúc (gentle bell)
+  - Real-time volume control slider
+  - Countdown timer với Mandala-style design
+  - UI theo phong cách Phật giáo (vàng đồng, nâu gỗ, sen)
+  - Tích hợp vào Reading Detail Page
+
+- ✅ **UI/UX Enhancements**
+  - Buddhist-themed color palette (Golden Bronze, Dark Wood, Ivory)
+  - Improved color contrast for better readability
+  - Lotus icon 🪷 and Om symbol 🕉️
+  - Smooth animations and transitions
+  - Volume slider với visual feedback
+
+- ✅ **Auto-detect API URL**
+  - Tự động phát hiện emulator vs physical device
+  - Hỗ trợ cả Android và iOS
+  - Unified configuration cho tất cả môi trường
+  - Debug logging để troubleshoot
+
+- ✅ **Bug Fixes**
+  - Fixed 404 error khi thêm sách từ URL (cloudinaryUrl → pdfUrl)
+  - Fixed BookCategory type error trong Books Library
+  - Thêm field "Người dịch" (translator) cho sách
+  - Improved error handling
 
 ### Version 1.2.0 (October 25, 2025) - Books Library
 - ✅ **Books Library - Thư viện Kinh Sách PDF**
@@ -311,20 +355,21 @@ ThienTam APP/
 ## 📞 LIÊN HỆ
 
 - **GitHub:** https://github.com/trahoangdev/thien-tam-app
-- **Version:** 1.2.0
-- **Last Updated:** October 25, 2025
+- **Version:** 1.3.0
+- **Last Updated:** October 28, 2025
 
 ---
 
 ## 📈 THỐNG KÊ DỰ ÁN
 
-- **Tổng số chức năng:** 52
+- **Tổng số chức năng:** 60
 - **Backend Routes:** 9 main routes
-- **Database Models:** 6 models
-- **Frontend Features:** 7 feature modules
-- **Lines of Code:** ~20,000+ (Backend + Frontend)
-- **API Endpoints:** 60+ endpoints
+- **Database Models:** 7 models (Reading, Topic, User, AdminUser, Audio, Book, BookCategory, ChatConversation)
+- **Frontend Features:** 8 feature modules (Readings, Auth, Admin, Audio, Books, Chat, TTS, Notifications)
+- **Lines of Code:** ~25,000+ (Backend + Frontend)
+- **API Endpoints:** 70+ endpoints
 - **Development Time:** 3+ months
+- **Ambient Sound Assets:** 4 files (Rain, Temple, Nature, Bell) - ~17 MB total
 
 ---
 
