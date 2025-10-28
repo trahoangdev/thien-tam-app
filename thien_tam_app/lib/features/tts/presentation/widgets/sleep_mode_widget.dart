@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import '../../data/sleep_mode_models.dart';
 import '../../data/sleep_mode_service.dart';
 
-/// Sleep Mode Widget
-/// Giao diện điều khiển chế độ ngủ
+/// Sleep Mode Widget - Thiết kế theo phong cách Phật giáo
+/// Màu sắc: Vàng đồng, nâu gỗ, trắng ngà
 class SleepModeWidget extends StatefulWidget {
   final SleepModeService sleepModeService;
 
@@ -15,6 +15,14 @@ class SleepModeWidget extends StatefulWidget {
 
 class _SleepModeWidgetState extends State<SleepModeWidget> {
   late SleepModeSettings _settings;
+
+  // Phật giáo color palette
+  static const Color _goldenBronze = Color(0xFFCD9B56); // Vàng đồng
+  static const Color _darkWood = Color(0xFF5D4E37); // Nâu gỗ tối
+  static const Color _lightWood = Color(0xFF8B7355); // Nâu gỗ sáng
+  static const Color _ivory = Color(0xFFFFFFF0); // Trắng ngà
+  static const Color _lotus = Color(0xFFFFB6C1); // Hồng sen nhạt
+  static const Color _bamboo = Color(0xFF7C9473); // Xanh tre
 
   @override
   void initState() {
@@ -41,93 +49,179 @@ class _SleepModeWidgetState extends State<SleepModeWidget> {
     final isActive = service.state != SleepModeState.inactive;
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Colors.indigo.shade900, Colors.purple.shade900],
-        ),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Header
-          Row(
-            children: [
-              const Icon(Icons.nightlight_round, color: Colors.white, size: 28),
-              const SizedBox(width: 12),
-              const Text(
-                'Chế độ ngủ',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const Spacer(),
-              if (isActive) _buildStatusChip(service.state),
-            ],
-          ),
-
-          const SizedBox(height: 20),
-
-          if (!isActive) ...[
-            // Settings khi chưa bật
-            _buildSettings(),
-            const SizedBox(height: 20),
-            _buildStartButton(),
-          ] else ...[
-            // Controls khi đang chạy
-            _buildActiveControls(service),
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            _darkWood,
+            _lightWood.withOpacity(0.9),
           ],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
         ],
       ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: const AssetImage('assets/images/wood_texture.png'),
+              fit: BoxFit.cover,
+              opacity: 0.05,
+              onError: (_, __) {}, // Graceful fallback if image not found
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header với trang trí sen vàng
+                _buildHeader(isActive, service.state),
+                const SizedBox(height: 24),
+
+                if (!isActive) ...[
+                  // Settings khi chưa bật
+                  _buildSettings(),
+                  const SizedBox(height: 24),
+                  _buildStartButton(),
+                ] else ...[
+                  // Controls khi đang chạy
+                  _buildActiveControls(service),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(bool isActive, SleepModeState state) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            // Icon sen vàng thay vì nightlight
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: _goldenBronze.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Text(
+                '🪷', // Lotus emoji
+                style: TextStyle(fontSize: 24),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Chế độ ngủ',
+                    style: TextStyle(
+                      color: _ivory,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  Text(
+                    'An lạc tâm thần',
+                    style: TextStyle(
+                      color: _goldenBronze.withOpacity(0.7),
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (isActive) _buildStatusChip(state),
+          ],
+        ),
+        // Divider trang trí
+        Container(
+          margin: const EdgeInsets.only(top: 16),
+          height: 1,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Colors.transparent,
+                _goldenBronze.withOpacity(0.5),
+                Colors.transparent,
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
   Widget _buildStatusChip(SleepModeState state) {
     String label;
+    String emoji;
     Color color;
 
     switch (state) {
       case SleepModeState.preparing:
-        label = 'Đang chuẩn bị...';
-        color = Colors.orange;
+        label = 'Chuẩn bị';
+        emoji = '🕉️';
+        color = _goldenBronze;
         break;
       case SleepModeState.playing:
         label = 'Đang phát';
-        color = Colors.green;
+        emoji = '🧘';
+        color = _bamboo;
         break;
       case SleepModeState.fadingOut:
-        label = 'Đang giảm âm';
-        color = Colors.blue;
+        label = 'Giảm âm';
+        emoji = '🌙';
+        color = _lotus;
         break;
       case SleepModeState.ringingBell:
-        label = 'Chuông kết thúc';
-        color = Colors.purple;
+        label = 'Chuông';
+        emoji = '🔔';
+        color = _goldenBronze;
         break;
       default:
-        label = 'Đã dừng';
+        label = 'Dừng';
+        emoji = '✨';
         color = Colors.grey;
     }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color, width: 1.5),
+        color: color.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withOpacity(0.5), width: 1),
       ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: color,
-          fontWeight: FontWeight.bold,
-          fontSize: 12,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(emoji, style: const TextStyle(fontSize: 14)),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: _ivory,
+              fontWeight: FontWeight.w500,
+              fontSize: 12,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -136,29 +230,31 @@ class _SleepModeWidgetState extends State<SleepModeWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Timer slider
+        // Timer slider với thiết kế sen
         _buildTimerSlider(),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
 
         // Fade out toggle
         _buildToggle(
           'Giảm âm lượng dần',
+          '🌅',
           _settings.fadeOut,
           (value) => setState(() {
             _settings = _settings.copyWith(fadeOut: value);
           }),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
 
         // Gentle bell toggle
         _buildToggle(
           'Chuông nhẹ khi kết thúc',
+          '🔔',
           _settings.gentleBell,
           (value) => setState(() {
             _settings = _settings.copyWith(gentleBell: value);
           }),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
 
         // Background sound selector
         _buildBackgroundSoundSelector(),
@@ -173,52 +269,109 @@ class _SleepModeWidgetState extends State<SleepModeWidget> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              'Thời gian',
-              style: TextStyle(color: Colors.white70, fontSize: 14),
+            Row(
+              children: [
+                Text(
+                  '⏱️',
+                  style: const TextStyle(fontSize: 16),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Thời gian',
+                  style: TextStyle(
+                    color: _ivory.withOpacity(0.8),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
-            Text(
-              '${_settings.autoStopMinutes} phút',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              decoration: BoxDecoration(
+                color: _goldenBronze.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: _goldenBronze.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: Text(
+                '${_settings.autoStopMinutes} phút',
+                style: TextStyle(
+                  color: _goldenBronze,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],
         ),
-        Slider(
-          value: _settings.autoStopMinutes.toDouble(),
-          min: 5,
-          max: 120,
-          divisions: 23,
-          activeColor: Colors.white,
-          inactiveColor: Colors.white24,
-          onChanged: (value) {
-            setState(() {
-              _settings = _settings.copyWith(autoStopMinutes: value.toInt());
-            });
-          },
+        const SizedBox(height: 8),
+        SliderTheme(
+          data: SliderThemeData(
+            activeTrackColor: _goldenBronze,
+            inactiveTrackColor: _goldenBronze.withOpacity(0.2),
+            thumbColor: _ivory,
+            overlayColor: _goldenBronze.withOpacity(0.2),
+            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
+            overlayShape: const RoundSliderOverlayShape(overlayRadius: 20),
+          ),
+          child: Slider(
+            value: _settings.autoStopMinutes.toDouble(),
+            min: 5,
+            max: 120,
+            divisions: 23,
+            onChanged: (value) {
+              setState(() {
+                _settings = _settings.copyWith(autoStopMinutes: value.toInt());
+              });
+            },
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildToggle(String label, bool value, Function(bool) onChanged) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(color: Colors.white70, fontSize: 14),
+  Widget _buildToggle(
+      String label, String emoji, bool value, Function(bool) onChanged) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: _darkWood.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: value ? _goldenBronze.withOpacity(0.5) : Colors.transparent,
+          width: 1,
         ),
-        Switch(
-          value: value,
-          onChanged: onChanged,
-          activeColor: Colors.white,
-          activeTrackColor: Colors.white38,
-        ),
-      ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Text(emoji, style: const TextStyle(fontSize: 18)),
+              const SizedBox(width: 12),
+              Text(
+                label,
+                style: TextStyle(
+                  color: _ivory.withOpacity(0.9),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          Switch(
+            value: value,
+            onChanged: onChanged,
+            activeColor: _goldenBronze,
+            activeTrackColor: _goldenBronze.withOpacity(0.5),
+            inactiveThumbColor: _ivory.withOpacity(0.5),
+            inactiveTrackColor: _darkWood.withOpacity(0.5),
+          ),
+        ],
+      ),
     );
   }
 
@@ -226,14 +379,24 @@ class _SleepModeWidgetState extends State<SleepModeWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Âm thanh nền',
-          style: TextStyle(color: Colors.white70, fontSize: 14),
+        Row(
+          children: [
+            Text('🎵', style: const TextStyle(fontSize: 16)),
+            const SizedBox(width: 8),
+            Text(
+              'Âm thanh nền',
+              style: TextStyle(
+                color: _ivory.withOpacity(0.8),
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
         Wrap(
-          spacing: 8,
-          runSpacing: 8,
+          spacing: 10,
+          runSpacing: 10,
           children: BackgroundSound.values.map((sound) {
             final isSelected = _settings.backgroundSound == sound;
             return GestureDetector(
@@ -245,36 +408,59 @@ class _SleepModeWidgetState extends State<SleepModeWidget> {
               child: Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
-                  vertical: 10,
+                  vertical: 12,
                 ),
                 decoration: BoxDecoration(
-                  color: isSelected ? Colors.white : Colors.white12,
-                  borderRadius: BorderRadius.circular(20),
+                  gradient: isSelected
+                      ? LinearGradient(
+                          colors: [
+                            _goldenBronze.withOpacity(0.3),
+                            _goldenBronze.withOpacity(0.1),
+                          ],
+                        )
+                      : null,
+                  color: isSelected ? null : _darkWood.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: isSelected ? Colors.white : Colors.white24,
-                    width: 2,
+                    color: isSelected
+                        ? _goldenBronze
+                        : _ivory.withOpacity(0.1),
+                    width: isSelected ? 2 : 1,
                   ),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: _goldenBronze.withOpacity(0.3),
+                            blurRadius: 8,
+                            spreadRadius: 1,
+                          ),
+                        ]
+                      : null,
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      _getSoundIcon(sound),
-                      color: isSelected
-                          ? Colors.indigo.shade900
-                          : Colors.white70,
-                      size: 18,
-                    ),
-                    const SizedBox(width: 6),
                     Text(
-                      sound.displayName,
+                      _getSoundEmoji(sound),
                       style: TextStyle(
-                        color: isSelected
-                            ? Colors.indigo.shade900
-                            : Colors.white,
-                        fontWeight: isSelected
-                            ? FontWeight.bold
-                            : FontWeight.normal,
+                        fontSize: 18,
+                        shadows: isSelected
+                            ? [
+                                Shadow(
+                                  color: _goldenBronze.withOpacity(0.5),
+                                  blurRadius: 4,
+                                ),
+                              ]
+                            : null,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      _getSoundLabel(sound),
+                      style: TextStyle(
+                        color: isSelected ? _goldenBronze : _ivory,
+                        fontWeight:
+                            isSelected ? FontWeight.bold : FontWeight.normal,
                         fontSize: 13,
                       ),
                     ),
@@ -288,171 +474,230 @@ class _SleepModeWidgetState extends State<SleepModeWidget> {
     );
   }
 
-  IconData _getSoundIcon(BackgroundSound sound) {
-    switch (sound) {
-      case BackgroundSound.rain:
-        return Icons.water_drop;
-      case BackgroundSound.temple:
-        return Icons.temple_buddhist;
-      case BackgroundSound.nature:
-        return Icons.nature;
-      case BackgroundSound.silence:
-        return Icons.volume_off;
-    }
-  }
-
   Widget _buildStartButton() {
-    return SizedBox(
+    return Container(
       width: double.infinity,
-      child: ElevatedButton(
-        onPressed: () {
-          widget.sleepModeService.start(_settings);
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.indigo.shade900,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
-          ),
-        ),
-        child: const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.bedtime, size: 20),
-            SizedBox(width: 8),
-            Text(
-              'Bắt đầu chế độ ngủ',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
+      height: 56,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            _goldenBronze,
+            _goldenBronze.withOpacity(0.8),
           ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: _goldenBronze.withOpacity(0.4),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            widget.sleepModeService.start(_settings);
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('🪷', style: const TextStyle(fontSize: 20)),
+                const SizedBox(width: 12),
+                Text(
+                  'Bắt đầu chế độ ngủ',
+                  style: TextStyle(
+                    color: _ivory,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
 
   Widget _buildActiveControls(SleepModeService service) {
+    final remainingMinutes = service.remainingSeconds ~/ 60;
+    final remainingSeconds = service.remainingSeconds % 60;
+    final progress = service.remainingSeconds / (service.settings.autoStopMinutes * 60);
+
     return Column(
       children: [
-        // Timer display
+        // Countdown timer với thiết kế mandala
         Container(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(32),
           decoration: BoxDecoration(
-            color: Colors.white12,
-            borderRadius: BorderRadius.circular(20),
+            shape: BoxShape.circle,
+            gradient: RadialGradient(
+              colors: [
+                _goldenBronze.withOpacity(0.3),
+                _darkWood.withOpacity(0.1),
+              ],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: _goldenBronze.withOpacity(0.3),
+                blurRadius: 20,
+                spreadRadius: 5,
+              ),
+            ],
           ),
-          child: Column(
+          child: Stack(
+            alignment: Alignment.center,
             children: [
-              Text(
-                _formatTime(service.remainingSeconds),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 48,
-                  fontWeight: FontWeight.bold,
-                  fontFeatures: [FontFeature.tabularFigures()],
+              // Progress circle
+              SizedBox(
+                width: 140,
+                height: 140,
+                child: CircularProgressIndicator(
+                  value: progress,
+                  strokeWidth: 6,
+                  backgroundColor: _darkWood.withOpacity(0.3),
+                  valueColor: AlwaysStoppedAnimation<Color>(_goldenBronze),
                 ),
               ),
-              const SizedBox(height: 8),
+              // Time display
+              Column(
+                children: [
+                  Text(
+                    '🕉️',
+                    style: const TextStyle(fontSize: 28),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '${remainingMinutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}',
+                    style: TextStyle(
+                      color: _ivory,
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                  Text(
+                    'phút',
+                    style: TextStyle(
+                      color: _goldenBronze.withOpacity(0.7),
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 32),
+
+        // Volume indicator
+        if (service.currentVolume < 1.0) ...[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('🔉', style: const TextStyle(fontSize: 16)),
+              const SizedBox(width: 8),
               Text(
-                'còn lại',
+                'Âm lượng: ${(service.currentVolume * 100).toInt()}%',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.7),
+                  color: _ivory.withOpacity(0.7),
                   fontSize: 14,
                 ),
               ),
             ],
           ),
-        ),
-
-        const SizedBox(height: 20),
-
-        // Volume control
-        if (service.state == SleepModeState.playing ||
-            service.state == SleepModeState.fadingOut) ...[
-          Row(
-            children: [
-              const Icon(Icons.volume_down, color: Colors.white70),
-              Expanded(
-                child: Slider(
-                  value: service.currentVolume,
-                  min: 0,
-                  max: 1,
-                  activeColor: Colors.white,
-                  inactiveColor: Colors.white24,
-                  onChanged: (value) {
-                    service.setVolume(value);
-                  },
-                ),
-              ),
-              const Icon(Icons.volume_up, color: Colors.white70),
-            ],
-          ),
           const SizedBox(height: 16),
         ],
 
-        // Time adjustment buttons
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            _buildTimeButton('-5', () => service.reduceTime(5)),
-            _buildTimeButton('+5', () => service.addTime(5)),
-            _buildTimeButton('+15', () => service.addTime(15)),
-          ],
-        ),
-
-        const SizedBox(height: 16),
-
-        // Stop button
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton(
-            onPressed: () {
-              service.stop();
-            },
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.white,
-              side: const BorderSide(color: Colors.white, width: 2),
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
-              ),
-            ),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.stop_circle_outlined, size: 20),
-                SizedBox(width: 8),
-                Text(
-                  'Dừng chế độ ngủ',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-          ),
+        // Control button - Dừng
+        _buildControlButton(
+          icon: '⏹️',
+          label: 'Dừng chế độ ngủ',
+          onTap: service.stop,
+          isDestructive: true,
         ),
       ],
     );
   }
 
-  Widget _buildTimeButton(String label, VoidCallback onPressed) {
-    return OutlinedButton(
-      onPressed: onPressed,
-      style: OutlinedButton.styleFrom(
-        foregroundColor: Colors.white,
-        side: const BorderSide(color: Colors.white60),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+  Widget _buildControlButton({
+    required String icon,
+    required String label,
+    required VoidCallback onTap,
+    bool isDestructive = false,
+  }) {
+    return Container(
+      width: double.infinity,
+      height: 48,
+      decoration: BoxDecoration(
+        color: isDestructive
+            ? Colors.red.withOpacity(0.2)
+            : _darkWood.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDestructive
+              ? Colors.red.withOpacity(0.5)
+              : _goldenBronze.withOpacity(0.3),
+          width: 1,
+        ),
       ),
-      child: Text(
-        label,
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(icon, style: const TextStyle(fontSize: 18)),
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: isDestructive ? Colors.red.shade300 : _ivory,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
 
-  String _formatTime(int seconds) {
-    final minutes = seconds ~/ 60;
-    final secs = seconds % 60;
-    return '${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+  String _getSoundEmoji(BackgroundSound sound) {
+    switch (sound) {
+      case BackgroundSound.silence:
+        return '🤫';
+      case BackgroundSound.rain:
+        return '🌧️';
+      case BackgroundSound.temple:
+        return '🛕';
+      case BackgroundSound.nature:
+        return '🍃';
+    }
+  }
+
+  String _getSoundLabel(BackgroundSound sound) {
+    switch (sound) {
+      case BackgroundSound.silence:
+        return 'Im lặng';
+      case BackgroundSound.rain:
+        return 'Tiếng mưa';
+      case BackgroundSound.temple:
+        return 'Tiếng chuông chùa';
+      case BackgroundSound.nature:
+        return 'Thiên nhiên';
+    }
   }
 }
