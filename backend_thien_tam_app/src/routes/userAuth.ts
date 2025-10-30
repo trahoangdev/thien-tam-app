@@ -21,12 +21,8 @@ const loginSchema = z.object({
 
 const updateProfileSchema = z.object({
   name: z.string().min(2, 'Tên phải có ít nhất 2 ký tự').max(50, 'Tên không được quá 50 ký tự').optional(),
-  avatar: z.string().url('avatar phải là URL hợp lệ').optional(),
-  dateOfBirth: z.string().optional().refine((val) => {
-    if (!val) return true;
-    const date = new Date(val);
-    return !isNaN(date.getTime());
-  }, 'Ngày sinh không hợp lệ'),
+  avatar: z.string().optional().nullable(), // Remove strict .url() validation to allow Supabase URLs with params
+  dateOfBirth: z.string().optional().nullable(), // Remove strict .datetime() validation, will parse in handler
   preferences: z.object({
     theme: z.enum(['light', 'dark', 'auto']).optional(),
     fontSize: z.enum(['small', 'medium', 'large']).optional(),
@@ -175,6 +171,8 @@ router.post('/register', async (req, res) => {
         email: user.email,
         name: user.name,
         role: user.role,
+        avatar: user.avatar,
+        dateOfBirth: user.dateOfBirth,
       },
       tokens: {
         accessToken,
@@ -309,6 +307,8 @@ router.post('/login', async (req, res) => {
         email: user.email,
         name: user.name,
         role: user.role,
+        avatar: user.avatar,
+        dateOfBirth: user.dateOfBirth,
       },
       tokens: {
         accessToken,
@@ -483,9 +483,9 @@ router.get('/me', requireAuth, async (req, res) => {
         id: user._id,
         email: user.email,
         name: user.name,
+        role: user.role,
         avatar: user.avatar,
         dateOfBirth: user.dateOfBirth,
-        role: user.role,
         preferences: user.preferences,
         stats: user.stats,
         createdAt: user.createdAt,
@@ -625,11 +625,35 @@ router.put('/profile', requireAuth, async (req, res) => {
     if (updateData.name) {
       user.name = updateData.name;
     }
-    if (updateData.avatar) {
-      user.avatar = updateData.avatar;
+    
+    if (updateData.avatar !== undefined) {
+      // Basic URL validation
+      if (updateData.avatar && !updateData.avatar.startsWith('http')) {
+        return res.status(400).json({ 
+          message: 'Avatar phải là URL hợp lệ (bắt đầu bằng http:// hoặc https://)' 
+        });
+      }
+      user.avatar = updateData.avatar || undefined;
     }
-    if (updateData.dateOfBirth) {
-      user.dateOfBirth = new Date(updateData.dateOfBirth);
+    
+    if (updateData.dateOfBirth !== undefined) {
+      if (updateData.dateOfBirth) {
+        const parsedDate = new Date(updateData.dateOfBirth);
+        if (isNaN(parsedDate.getTime())) {
+          return res.status(400).json({ 
+            message: 'Ngày sinh không hợp lệ' 
+          });
+        }
+        // Check if date is not in the future
+        if (parsedDate > new Date()) {
+          return res.status(400).json({ 
+            message: 'Ngày sinh không thể là ngày trong tương lai' 
+          });
+        }
+        user.dateOfBirth = parsedDate;
+      } else {
+        user.dateOfBirth = undefined;
+      }
     }
     
     if (updateData.preferences && user.preferences) {
@@ -662,6 +686,12 @@ router.put('/profile', requireAuth, async (req, res) => {
         dateOfBirth: user.dateOfBirth,
         role: user.role,
         preferences: user.preferences,
+        stats: user.stats,
+        isActive: user.isActive,
+        isEmailVerified: user.isEmailVerified,
+        lastLoginAt: user.lastLoginAt,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
       },
     });
   } catch (error) {

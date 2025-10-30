@@ -36,7 +36,7 @@ class User {
       name: json['name'] ?? '',
       avatar: json['avatar'],
       dateOfBirth: json['dateOfBirth'] != null
-          ? DateTime.tryParse(json['dateOfBirth'])
+          ? DateTime.parse(json['dateOfBirth'])
           : null,
       role: UserRole.fromString(json['role'] ?? 'USER'),
       preferences: UserPreferences.fromJson(json['preferences'] ?? {}),
@@ -78,6 +78,7 @@ class User {
     String? email,
     String? name,
     String? avatar,
+    DateTime? dateOfBirth,
     UserRole? role,
     UserPreferences? preferences,
     UserStats? stats,
@@ -92,6 +93,7 @@ class User {
       email: email ?? this.email,
       name: name ?? this.name,
       avatar: avatar ?? this.avatar,
+      dateOfBirth: dateOfBirth ?? this.dateOfBirth,
       role: role ?? this.role,
       preferences: preferences ?? this.preferences,
       stats: stats ?? this.stats,

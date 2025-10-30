@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../auth/data/models/user.dart';
 import '../providers/auth_providers.dart';
 import '../../../../core/config.dart';
 
@@ -48,9 +47,9 @@ class _UserProfilePageState extends ConsumerState<UserProfilePage> {
     });
 
     try {
-      final updated = await ref.read(authServiceProvider).updateProfile(
-            name: _nameController.text.trim(),
-          );
+      final updated = await ref
+          .read(authServiceProvider)
+          .updateProfile(name: _nameController.text.trim());
       ref.read(currentUserProvider.notifier).state = updated;
 
       if (mounted) {
@@ -76,7 +75,8 @@ class _UserProfilePageState extends ConsumerState<UserProfilePage> {
     if (user == null) return;
 
     final now = DateTime.now();
-    final initial = user.dateOfBirth ?? DateTime(now.year - 20, now.month, now.day);
+    final initial =
+        user.dateOfBirth ?? DateTime(now.year - 20, now.month, now.day);
 
     final picked = await showDatePicker(
       context: context,
@@ -93,9 +93,9 @@ class _UserProfilePageState extends ConsumerState<UserProfilePage> {
       });
 
       try {
-        final updated = await ref.read(authServiceProvider).updateProfile(
-              dateOfBirth: picked,
-            );
+        final updated = await ref
+            .read(authServiceProvider)
+            .updateProfile(dateOfBirth: picked);
         ref.read(currentUserProvider.notifier).state = updated;
 
         if (mounted) {
@@ -129,14 +129,20 @@ class _UserProfilePageState extends ConsumerState<UserProfilePage> {
 
       // Initialize Supabase if needed
       if (!_sbInitialized) {
-        await Supabase.initialize(
-          url: AppConfig.supabaseUrl,
-          anonKey: AppConfig.supabaseAnonKey,
-        );
-        _sbInitialized = true;
+        try {
+          await Supabase.initialize(
+            url: AppConfig.supabaseUrl,
+            anonKey: AppConfig.supabaseAnonKey,
+          );
+          _sbInitialized = true;
+          print('✅ Supabase initialized successfully');
+        } catch (e) {
+          throw Exception('Không thể kết nối Supabase: $e');
+        }
       }
 
-      // Pick image
+      // Pick image (file_picker handles permissions internally)
+      print('📸 Opening file picker...');
       final picked = await FilePicker.platform.pickFiles(
         type: FileType.image,
         allowMultiple: false,
@@ -144,6 +150,7 @@ class _UserProfilePageState extends ConsumerState<UserProfilePage> {
       );
 
       if (picked == null || picked.files.isEmpty) {
+        print('❌ No file selected');
         setState(() {
           _isLoading = false;
         });
@@ -151,11 +158,12 @@ class _UserProfilePageState extends ConsumerState<UserProfilePage> {
       }
 
       final file = picked.files.first;
+      print(
+        '✅ File selected: ${file.name}, size: ${file.bytes?.length ?? 0} bytes',
+      );
+
       if (file.bytes == null) {
-        setState(() {
-          _isLoading = false;
-        });
-        return;
+        throw Exception('Không thể đọc file ảnh. Vui lòng thử lại.');
       }
 
       // Upload to Supabase
@@ -163,33 +171,52 @@ class _UserProfilePageState extends ConsumerState<UserProfilePage> {
           'avatar_${user.id}_${DateTime.now().millisecondsSinceEpoch}.${file.extension ?? 'png'}';
       final path = 'users/${user.id}/$fileName';
 
+      print('📤 Uploading to Supabase: $path');
       final storage = Supabase.instance.client.storage.from('avatars');
-      await storage.uploadBinary(
-        path,
-        file.bytes!,
-        fileOptions: const FileOptions(
-          upsert: true,
-          cacheControl: '3600',
-        ),
-      );
+
+      try {
+        await storage.uploadBinary(
+          path,
+          file.bytes!,
+          fileOptions: const FileOptions(upsert: true, cacheControl: '3600'),
+        );
+        print('✅ Upload successful');
+      } catch (e) {
+        throw Exception('Lỗi upload ảnh lên Supabase: $e');
+      }
 
       final publicUrl = storage.getPublicUrl(path);
+      print('🔗 Public URL: $publicUrl');
 
       // Update profile with new avatar URL
-      final updated = await ref.read(authServiceProvider).updateProfile(
-            avatar: publicUrl,
-          );
+      print('💾 Updating profile...');
+      final updated = await ref
+          .read(authServiceProvider)
+          .updateProfile(avatar: publicUrl);
       ref.read(currentUserProvider.notifier).state = updated;
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Đã cập nhật ảnh đại diện thành công')),
+          const SnackBar(
+            content: Text('✓ Đã cập nhật ảnh đại diện thành công'),
+            backgroundColor: Colors.green,
+          ),
         );
       }
     } catch (e) {
+      print('❌ Error: $e');
       setState(() {
-        _error = 'Lỗi cập nhật avatar: $e';
+        _error = e.toString().replaceAll('Exception: ', '');
       });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi: ${e.toString().replaceAll('Exception: ', '')}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -207,9 +234,7 @@ class _UserProfilePageState extends ConsumerState<UserProfilePage> {
     if (user == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('Thông Tin Cá Nhân')),
-        body: const Center(
-          child: Text('Vui lòng đăng nhập để xem thông tin'),
-        ),
+        body: const Center(child: Text('Vui lòng đăng nhập để xem thông tin')),
       );
     }
 
@@ -283,12 +308,16 @@ class _UserProfilePageState extends ConsumerState<UserProfilePage> {
                           children: [
                             CircleAvatar(
                               radius: 60,
-                              backgroundColor:
-                                  Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                              backgroundImage: (user.avatar != null && user.avatar!.isNotEmpty)
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.primary.withOpacity(0.1),
+                              backgroundImage:
+                                  (user.avatar != null &&
+                                      user.avatar!.isNotEmpty)
                                   ? NetworkImage(user.avatar!)
                                   : null,
-                              child: (user.avatar == null || user.avatar!.isEmpty)
+                              child:
+                                  (user.avatar == null || user.avatar!.isEmpty)
                                   ? Text(
                                       user.name.isNotEmpty
                                           ? user.name[0].toUpperCase()
@@ -296,7 +325,9 @@ class _UserProfilePageState extends ConsumerState<UserProfilePage> {
                                       style: TextStyle(
                                         fontSize: 40,
                                         fontWeight: FontWeight.bold,
-                                        color: Theme.of(context).colorScheme.primary,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.primary,
                                       ),
                                     )
                                   : null,
@@ -326,10 +357,7 @@ class _UserProfilePageState extends ConsumerState<UserProfilePage> {
                         const SizedBox(height: 16),
                         const Text(
                           'Ảnh Đại Diện',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey,
-                          ),
+                          style: TextStyle(fontSize: 14, color: Colors.grey),
                         ),
                       ],
                     ),
@@ -478,13 +506,10 @@ class _UserProfilePageState extends ConsumerState<UserProfilePage> {
           if (isLoading)
             Container(
               color: Colors.black54,
-              child: const Center(
-                child: CircularProgressIndicator(),
-              ),
+              child: const Center(child: CircularProgressIndicator()),
             ),
         ],
       ),
     );
   }
 }
-

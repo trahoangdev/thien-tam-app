@@ -59,72 +59,36 @@ A full-stack Flutter application for daily Buddhist readings with Express.js bac
 ## 🚀 Quick Start
 
 ### Prerequisites
-- **Node.js** 18+ and npm (or Docker)
+- **Node.js** 18+ and npm
 - **Flutter** 3.9+ and Dart 3.0+
 - **MongoDB** (local or Atlas)
 - **Git**
 
-### Option 1: Docker (Recommended for Quick Setup)
-
+### 1. Clone Repository
 ```bash
-# Clone repository
-git clone https://github.com/trahoangdev/thien-tam-app.git
-cd thien-tam-app
-
-# Start all services (MongoDB + Backend + Mongo Express)
-docker-compose up -d
-
-# Seed database
-docker-compose exec backend npm run seed
-docker-compose exec backend npm run seed:admin
-
-# Access points:
-# - Backend API: http://localhost:4000
-# - Swagger Docs: http://localhost:4000/api-docs
-# - Mongo Express: http://localhost:8081
-```
-
-Then setup Flutter app separately:
-```bash
-cd thien_tam_app
-flutter pub get
-flutter run
-```
-
-### Option 2: Manual Setup
-
-#### 1. Clone Repository
-```bash
-git clone https://github.com/trahoangdev/thien-tam-app.git
+git clone https://github.com/yourusername/thien-tam-app.git
 cd thien-tam-app
 ```
 
-#### 2. Backend Setup
+### 2. Backend Setup
 ```bash
 cd backend_thien_tam_app
 npm install
-
-# Configure environment variables
-cp env.example .env
-# Edit .env with your configuration
-
 npm run seed          # Seed authentic Buddhist data
-npm run seed:admin    # Seed admin account
 npm run dev           # Start development server
 ```
 
-#### 3. Frontend Setup
+### 3. Frontend Setup
 ```bash
 cd thien_tam_app
 flutter pub get
 flutter run           # Start Flutter app
 ```
 
-#### 4. Access Points
+### 4. Access Points
 - **User App**: Flutter app on device/emulator
 - **Admin Panel**: Access via Settings → Admin Panel
 - **API**: http://localhost:4000/api
-- **Swagger Docs**: http://localhost:4000/api-docs
 - **Health Check**: http://localhost:4000/healthz
 
 ## 📚 Authentic Content
@@ -202,10 +166,6 @@ The app features authentic Buddhist content from traditional sources:
 
 ## 🚀 Deployment
 
-For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md)
-
-### Quick Deployment
-
 ### Backend Deployment
 ```bash
 # Production build
@@ -229,8 +189,6 @@ flutter build appbundle --release
 # iOS (requires macOS)
 flutter build ios --release
 ```
-
-**Supported Platforms**: Railway, Render, VPS, Docker, Google Play, App Store
 
 ## 🤝 Contributing
 
@@ -259,19 +217,9 @@ For support, email support@thientam.app or create an issue on GitHub.
 
 **May this app bring peace and wisdom to all beings. 🙏**
 
-## 📚 Documentation
-
-- **[CHANGELOG.md](CHANGELOG.md)** - Version history and updates
-- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Complete deployment guide
-- **[SECURITY.md](SECURITY.md)** - Security policy and best practices
-- **[FEATURES_SUMMARY.md](FEATURES_SUMMARY.md)** - Detailed feature list
-- **[API_COMPARISON.md](API_COMPARISON.md)** - API route comparison
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines
-
 ## 🔗 Links
 
 - **Live Demo**: [Coming Soon]
 - **Documentation**: [Wiki](https://github.com/trahoangdev/thien-tam-app/wiki)
 - **Issues**: [GitHub Issues](https://github.com/trahoangdev/thien-tam-app/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/trahoangdev/thien-tam-app/discussions)
-- **Security**: [Report Vulnerability](SECURITY.md)
