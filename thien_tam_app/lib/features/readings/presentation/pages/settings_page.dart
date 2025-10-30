@@ -8,9 +8,10 @@ import '../../data/reading_stats_service.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../auth/presentation/providers/permission_providers.dart'
     as permissions;
-import '../../../auth/data/models/user.dart';
+import '../../../auth/data/models/user.dart' as app_user;
 import '../../../auth/presentation/pages/login_page.dart';
 import '../../../auth/presentation/pages/register_page.dart';
+import '../../../auth/presentation/pages/user_profile_page.dart';
 import '../../../notifications/presentation/pages/notification_settings_page.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
@@ -526,7 +527,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 }
 
 class _UserProfileCard extends ConsumerWidget {
-  final User user;
+  final app_user.User user;
 
   const _UserProfileCard({required this.user});
 
@@ -543,18 +544,31 @@ class _UserProfileCard extends ConsumerWidget {
           children: [
             Row(
               children: [
-                CircleAvatar(
-                  radius: 24,
-                  backgroundColor: Theme.of(
-                    context,
-                  ).colorScheme.primary.withOpacity(0.1),
-                  child: Text(
-                    user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const UserProfilePage(),
+                      ),
+                    );
+                  },
+                  child: CircleAvatar(
+                    radius: 28,
+                    backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    backgroundImage: (user.avatar != null && user.avatar!.isNotEmpty)
+                        ? NetworkImage(user.avatar!)
+                        : null,
+                    child: (user.avatar == null || user.avatar!.isEmpty)
+                        ? Text(
+                            user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          )
+                        : null,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -562,10 +576,22 @@ class _UserProfileCard extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        user.name,
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.bold),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const UserProfilePage(),
+                            ),
+                          );
+                        },
+                        child: Text(
+                          user.name,
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                decoration: TextDecoration.underline,
+                              ),
+                        ),
                       ),
                       const SizedBox(height: 2),
                       Text(
@@ -577,28 +603,17 @@ class _UserProfileCard extends ConsumerWidget {
                     ],
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: user.role.isPremium
-                        ? Colors.amber.withOpacity(0.2)
-                        : Theme.of(
-                            context,
-                          ).colorScheme.primaryContainer.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    user.role.displayName,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: user.role.isPremium
-                          ? Colors.amber.shade800
-                          : Theme.of(context).colorScheme.onPrimaryContainer,
-                    ),
-                  ),
+                IconButton(
+                  tooltip: 'Xem chi tiết',
+                  icon: const Icon(Icons.chevron_right),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const UserProfilePage(),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),

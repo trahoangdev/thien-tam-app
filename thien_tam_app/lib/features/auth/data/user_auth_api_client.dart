@@ -98,12 +98,22 @@ class UserAuthApiClient {
   // PUT /user-auth/profile - Update user profile
   Future<User> updateProfile({
     String? name,
+    String? avatar,
+    DateTime? dateOfBirth,
     UserPreferences? preferences,
   }) async {
     final data = <String, dynamic>{};
 
     if (name != null) {
       data['name'] = name;
+    }
+
+    if (avatar != null) {
+      data['avatar'] = avatar;
+    }
+
+    if (dateOfBirth != null) {
+      data['dateOfBirth'] = dateOfBirth.toIso8601String();
     }
 
     if (preferences != null) {

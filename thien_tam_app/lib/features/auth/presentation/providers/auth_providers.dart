@@ -142,12 +142,16 @@ class AuthService {
   // Update user profile
   Future<User> updateProfile({
     String? name,
+    String? avatar,
+    DateTime? dateOfBirth,
     UserPreferences? preferences,
   }) async {
     try {
       final apiClient = ref.read(userAuthApiClientProvider);
       final updatedUser = await apiClient.updateProfile(
         name: name,
+        avatar: avatar,
+        dateOfBirth: dateOfBirth,
         preferences: preferences,
       );
 

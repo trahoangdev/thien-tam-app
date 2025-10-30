@@ -42,6 +42,7 @@ export interface IUser extends Document {
   passwordHash: string;
   name: string;
   avatar?: string;
+  dateOfBirth?: Date;
   role: UserRole;
   
   // Optional fields (only for USER role)
@@ -89,6 +90,10 @@ const UserSchema = new Schema<IUser>({
   },
   avatar: {
     type: String,
+    default: null,
+  },
+  dateOfBirth: {
+    type: Date,
     default: null,
   },
   role: {

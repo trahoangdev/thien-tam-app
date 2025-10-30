@@ -84,6 +84,7 @@ dependencies:
 
   # Device info (required by Syncfusion PDF viewer)
   device_info_plus: ^11.5.0
+  supabase_flutter: ^2.6.0
 
 dev_dependencies:
   flutter_test:

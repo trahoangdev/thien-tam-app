@@ -28,12 +28,26 @@ class AppConfig {
   static const String appName = 'Thiền Tâm';
   static const String appVersion = '1.0.0';
 
+  // Supabase configuration (use --dart-define to override in builds)
+  static const String supabaseUrl = String.fromEnvironment(
+    'SUPABASE_URL',
+    defaultValue:
+        'https://wulpbapjkreegmqqxpat.supabase.co',
+  );
+
+  static const String supabaseAnonKey = String.fromEnvironment(
+    'SUPABASE_ANON_KEY',
+    defaultValue:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1bHBiYXBqa3JlZWdtcXF4cGF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5OTM1OTQsImV4cCI6MjA3MzU2OTU5NH0.tjOlUpUdw_9UrueQORK-Uem0kA9DHN1eumBBrb6v0iI',
+  );
+
   /// For debugging: print current configuration
   static void printConfig() {
     if (kDebugMode) {
       print('🔧 AppConfig:');
       print('   Platform: ${_getPlatformName()}');
       print('   API Base URL: $apiBaseUrl');
+      print('   Supabase configured: ${supabaseUrl.isNotEmpty}');
       print('   Note: Using emulator/localhost for development');
     }
   }

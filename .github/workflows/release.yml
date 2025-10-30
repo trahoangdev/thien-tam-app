@@ -1,0 +1,109 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Extract version
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+      
+      - name: Generate changelog
+        id: changelog
+        run: |
+          CHANGELOG=$(cat CHANGELOG.md | sed -n "/## \[${{ steps.version.outputs.version }}\]/,/## \[/p" | sed '$d')
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body: ${{ steps.changelog.outputs.changelog }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.9.0'
+          channel: 'stable'
+      
+      - name: Get dependencies
+        working-directory: thien_tam_app
+        run: flutter pub get
+      
+      - name: Build APK
+        working-directory: thien_tam_app
+        run: flutter build apk --release
+      
+      - name: Build App Bundle
+        working-directory: thien_tam_app
+        run: flutter build appbundle --release
+      
+      - name: Upload APK
+        uses: softprops/action-gh-release@v1
+        with:
+          files: thien_tam_app/build/app/outputs/flutter-apk/app-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Upload App Bundle
+        uses: softprops/action-gh-release@v1
+        with:
+          files: thien_tam_app/build/app/outputs/bundle/release/app-release.aab
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-ios:
+    name: Build iOS (macOS only)
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.9.0'
+          channel: 'stable'
+      
+      - name: Get dependencies
+        working-directory: thien_tam_app
+        run: flutter pub get
+      
+      - name: Build iOS
+        working-directory: thien_tam_app
+        run: |
+          flutter build ios --release --no-codesign
+      
+      - name: Archive IPA
+        run: |
+          cd thien_tam_app/ios
+          # Add iOS build steps here
+

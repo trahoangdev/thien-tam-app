@@ -21,6 +21,12 @@ const loginSchema = z.object({
 
 const updateProfileSchema = z.object({
   name: z.string().min(2, 'Tên phải có ít nhất 2 ký tự').max(50, 'Tên không được quá 50 ký tự').optional(),
+  avatar: z.string().url('avatar phải là URL hợp lệ').optional(),
+  dateOfBirth: z.string().optional().refine((val) => {
+    if (!val) return true;
+    const date = new Date(val);
+    return !isNaN(date.getTime());
+  }, 'Ngày sinh không hợp lệ'),
   preferences: z.object({
     theme: z.enum(['light', 'dark', 'auto']).optional(),
     fontSize: z.enum(['small', 'medium', 'large']).optional(),
@@ -477,6 +483,8 @@ router.get('/me', requireAuth, async (req, res) => {
         id: user._id,
         email: user.email,
         name: user.name,
+        avatar: user.avatar,
+        dateOfBirth: user.dateOfBirth,
         role: user.role,
         preferences: user.preferences,
         stats: user.stats,
@@ -617,6 +625,12 @@ router.put('/profile', requireAuth, async (req, res) => {
     if (updateData.name) {
       user.name = updateData.name;
     }
+    if (updateData.avatar) {
+      user.avatar = updateData.avatar;
+    }
+    if (updateData.dateOfBirth) {
+      user.dateOfBirth = new Date(updateData.dateOfBirth);
+    }
     
     if (updateData.preferences && user.preferences) {
       if (updateData.preferences.theme) {
@@ -644,6 +658,8 @@ router.put('/profile', requireAuth, async (req, res) => {
         id: user._id,
         email: user.email,
         name: user.name,
+        avatar: user.avatar,
+        dateOfBirth: user.dateOfBirth,
         role: user.role,
         preferences: user.preferences,
       },
