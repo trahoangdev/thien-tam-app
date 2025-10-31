@@ -20,13 +20,12 @@ const chatSchema = z.object({
 });
 
 /**
- * @openapi
+ * @swagger
  * /chat/ask:
  *   post:
  *     summary: Chat với Thiền Sư (Gemini)
- *     description: Trả lời bằng tiếng Việt, phong cách từ bi và chánh niệm.
- *     tags:
- *       - Chat
+ *     description: Trả lời bằng tiếng Việt, phong cách từ bi và chánh niệm
+ *     tags: [Chat]
  *     requestBody:
  *       required: true
  *       content:
@@ -97,12 +96,12 @@ r.post('/ask', async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /chat/status:
  *   get:
- *     summary: Kiểm tra cấu hình Gemini
- *     tags:
- *       - Chat
+ *     summary: Check Gemini service configuration
+ *     description: Returns whether Gemini service is configured and ready
+ *     tags: [Chat]
  *     responses:
  *       200:
  *         description: Trạng thái

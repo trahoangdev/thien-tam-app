@@ -136,6 +136,59 @@ r.get("/topics", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /admin/topics/stats:
+ *   get:
+ *     summary: Get topic statistics (Admin)
+ *     description: Returns aggregated statistics about topics including counts and top topics
+ *     tags: [Admin - Topics]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved topic statistics
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 totalTopics:
+ *                   type: number
+ *                   description: Total number of topics
+ *                 activeTopics:
+ *                   type: number
+ *                   description: Number of active topics
+ *                 inactiveTopics:
+ *                   type: number
+ *                   description: Number of inactive topics
+ *                 topTopics:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       slug:
+ *                         type: string
+ *                         description: Topic slug
+ *                       name:
+ *                         type: string
+ *                         description: Topic name
+ *                       count:
+ *                         type: number
+ *                         description: Number of readings for this topic
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 // GET /admin/topics/stats - Get topic statistics
 r.get("/topics/stats", async (req, res) => {
   try {
@@ -190,6 +243,75 @@ r.get("/topics/stats", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /admin/topics/{id}:
+ *   get:
+ *     summary: Get topic by ID (Admin)
+ *     description: Retrieve a specific topic by its ID with reading count
+ *     tags: [Admin - Topics]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Topic ID
+ *         example: "507f1f77bcf86cd799439011"
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved topic
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 _id:
+ *                   type: string
+ *                 slug:
+ *                   type: string
+ *                 name:
+ *                   type: string
+ *                 description:
+ *                   type: string
+ *                 color:
+ *                   type: string
+ *                 icon:
+ *                   type: string
+ *                 sortOrder:
+ *                   type: number
+ *                 isActive:
+ *                   type: boolean
+ *                 readingCount:
+ *                   type: number
+ *                   description: Number of readings using this topic
+ *                 createdAt:
+ *                   type: string
+ *                   format: date-time
+ *                 updatedAt:
+ *                   type: string
+ *                   format: date-time
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Topic not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 // GET /admin/topics/:id - Get a single topic by ID
 r.get("/topics/:id", async (req, res) => {
   try {
@@ -213,6 +335,97 @@ r.get("/topics/:id", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /admin/topics:
+ *   post:
+ *     summary: Create new topic (Admin)
+ *     description: Create a new topic with validation
+ *     tags: [Admin - Topics]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - slug
+ *               - name
+ *             properties:
+ *               slug:
+ *                 type: string
+ *                 pattern: '^[a-z0-9-]+$'
+ *                 description: Topic slug (lowercase letters, numbers, and hyphens only)
+ *                 example: "phat-giao"
+ *               name:
+ *                 type: string
+ *                 minLength: 1
+ *                 description: Topic name
+ *                 example: "Phật Giáo"
+ *               description:
+ *                 type: string
+ *                 description: Topic description
+ *                 example: "Các bài viết về Phật giáo"
+ *               color:
+ *                 type: string
+ *                 pattern: '^#[0-9A-F]{6}$'
+ *                 description: Hex color code
+ *                 example: "#4CAF50"
+ *               icon:
+ *                 type: string
+ *                 description: Icon name or emoji
+ *                 example: "label"
+ *               sortOrder:
+ *                 type: number
+ *                 description: Display order
+ *                 example: 1
+ *     responses:
+ *       201:
+ *         description: Topic created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Tạo chủ đề thành công"
+ *                 topic:
+ *                   $ref: '#/components/schemas/Topic'
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 errors:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       409:
+ *         description: Topic with slug already exists
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 // POST /admin/topics - Create a new topic
 r.post("/topics", async (req, res) => {
   try {
@@ -255,6 +468,101 @@ r.post("/topics", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /admin/topics/{id}:
+ *   put:
+ *     summary: Update topic (Admin)
+ *     description: Update an existing topic by its ID
+ *     tags: [Admin - Topics]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Topic ID
+ *         example: "507f1f77bcf86cd799439011"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 minLength: 1
+ *                 description: Updated topic name
+ *                 example: "Phật Giáo Cơ Bản"
+ *               description:
+ *                 type: string
+ *                 description: Updated description
+ *                 example: "Các bài viết cơ bản về Phật giáo"
+ *               color:
+ *                 type: string
+ *                 pattern: '^#[0-9A-F]{6}$'
+ *                 description: Updated hex color code
+ *                 example: "#4CAF50"
+ *               icon:
+ *                 type: string
+ *                 description: Updated icon
+ *                 example: "book"
+ *               isActive:
+ *                 type: boolean
+ *                 description: Active status
+ *                 example: true
+ *               sortOrder:
+ *                 type: number
+ *                 description: Display order
+ *                 example: 1
+ *     responses:
+ *       200:
+ *         description: Topic updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Chủ đề đã được cập nhật"
+ *                 topic:
+ *                   $ref: '#/components/schemas/Topic'
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 errors:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Topic not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 // PUT /admin/topics/:id - Update an existing topic
 r.put("/topics/:id", async (req, res) => {
   try {
@@ -288,6 +596,63 @@ r.put("/topics/:id", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /admin/topics/{id}:
+ *   delete:
+ *     summary: Delete topic (Admin)
+ *     description: Delete a topic by its ID. Cannot delete if topic is used in any readings.
+ *     tags: [Admin - Topics]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Topic ID
+ *         example: "507f1f77bcf86cd799439011"
+ *     responses:
+ *       200:
+ *         description: Topic deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Chủ đề đã được xóa"
+ *       400:
+ *         description: Cannot delete topic that is used in readings
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Không thể xóa chủ đề \"Phật Giáo\" vì đang được sử dụng trong 25 bài đọc"
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Topic not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 // DELETE /admin/topics/:id - Delete a topic
 r.delete("/topics/:id", async (req, res) => {
   try {

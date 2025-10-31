@@ -478,6 +478,86 @@ r.delete("/readings/:id", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /admin/stats:
+ *   get:
+ *     summary: Get admin statistics
+ *     description: Returns aggregated statistics for admin dashboard including reading counts, topic statistics, recent readings, and monthly trends
+ *     tags: [Admin - Statistics]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved statistics
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 totalReadings:
+ *                   type: number
+ *                   description: Total number of readings in the database
+ *                   example: 365
+ *                 topicCounts:
+ *                   type: array
+ *                   description: Array of topics with their reading counts
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       topic:
+ *                         type: string
+ *                         description: Topic slug
+ *                         example: "phat-giao"
+ *                       count:
+ *                         type: number
+ *                         description: Number of readings for this topic
+ *                         example: 125
+ *                 recentReadings:
+ *                   type: array
+ *                   description: Last 10 readings sorted by date (descending)
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                       title:
+ *                         type: string
+ *                         example: "Chính Niệm - Sống Trong Hiện Tại"
+ *                       date:
+ *                         type: string
+ *                         format: date-time
+ *                       topicSlugs:
+ *                         type: array
+ *                         items:
+ *                           type: string
+ *                 monthlyStats:
+ *                   type: array
+ *                   description: Monthly reading statistics for the last 6 months
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       month:
+ *                         type: string
+ *                         description: Month in YYYY-MM format
+ *                         example: "2025-10"
+ *                       count:
+ *                         type: number
+ *                         description: Number of readings in that month
+ *                         example: 30
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 // Get statistics
 r.get("/stats", async (_req, res) => {
   try {
